@@ -1,6 +1,6 @@
 
 --- Account is the "Accountable entity", can be ether USER or MACHINE
-CREATE TABLE Accounts
+CREATE TABLE IF NOT EXISTS Accounts
 (
     id            uuid               DEFAULT uuid_generate_v4(),
     account_type  VARCHAR   NOT NULL DEFAULT 'user',
@@ -12,14 +12,14 @@ CREATE TABLE Accounts
     PRIMARY KEY (id)
 );
 
-CREATE TRIGGER SetUpdated_Clients
+CREATE IF NOT EXISTS TRIGGER SetUpdated_Clients
     BEFORE UPDATE
     ON Accounts
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
 
-CREATE TABLE Secrets
+CREATE TABLE IF NOT EXISTS Secrets
 (
     id         uuid      NOT NULL DEFAULT uuid_generate_v4(),
     name       VARCHAR   NOT NULL,
@@ -31,13 +31,13 @@ CREATE TABLE Secrets
     PRIMARY KEY (id, account_id)
 );
 
-CREATE TRIGGER SetUpdated_Secrets
+CREATE TRIGGER IF NOT EXISTS SetUpdated_Secrets
     BEFORE UPDATE
     ON Secrets
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
-CREATE TABLE LastLogin
+CREATE TABLE IF NOT EXISTS LastLoginAudit
 (
     id              uuid      NOT NULL DEFAULT uuid_generate_v4(),
     login_method    VARCHAR   NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE LastLogin
     PRIMARY KEY (id)
 );
 
-CREATE TABLE AccountStateAudit
+CREATE TABLE IF NOT EXISTS AccountStateAudit
 (
     prev_state VARCHAR   NOT NULL,
     curr_state VARCHAR   NOT NULL,
@@ -60,22 +60,22 @@ CREATE TABLE AccountStateAudit
 
 --- SPECIFIC ACCOUNTS
 
-CREATE TABLE Users
+CREATE TABLE IF NOT EXISTS Users
 (
-    id        uuid DEFAULT uuid_generate_v4(),
-    username  VARCHAR NOT NULL UNIQUE,
-    password  VARCHAR NOT NULL,
-    name      VARCHAR NULL,
-    email     VARCHAR NULL,
-    client_id uuid    NOT NULL REFERENCES Accounts (id),
+    id          uuid DEFAULT uuid_generate_v4(),
+    username    VARCHAR NOT NULL UNIQUE,
+    password    VARCHAR NOT NULL,
+    name        VARCHAR NULL,
+    email       VARCHAR NULL,
+    account_id  uuid    NOT NULL REFERENCES Accounts (id),
     PRIMARY KEY (id)
 );
 
-CREATE TABLE Machines
+CREATE TABLE IF NOT EXISTS Machines
 (
-    id        uuid DEFAULT uuid_generate_v4(),
-    codename  VARCHAR NOT NULL UNIQUE,
-    name      VARCHAR NULL,
-    client_id uuid    NOT NULL REFERENCES Accounts (id),
+    id          uuid DEFAULT uuid_generate_v4(),
+    codename    VARCHAR NOT NULL UNIQUE,
+    name        VARCHAR NULL,
+    account_id  uuid NOT NULL REFERENCES Accounts (id),
 );
 
