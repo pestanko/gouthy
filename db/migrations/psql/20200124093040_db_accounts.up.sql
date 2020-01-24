@@ -1,4 +1,3 @@
-
 --- Account is the "Accountable entity", can be ether USER or MACHINE
 CREATE TABLE IF NOT EXISTS Accounts
 (
@@ -18,7 +17,6 @@ CREATE TRIGGER SetUpdated_Clients
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
-
 CREATE TABLE IF NOT EXISTS Secrets
 (
     id         uuid      NOT NULL DEFAULT uuid_generate_v4(),
@@ -32,19 +30,20 @@ CREATE TABLE IF NOT EXISTS Secrets
 );
 
 CREATE TRIGGER SetUpdated_Secrets
-    BEFORE UPDATE ON Secrets
+    BEFORE UPDATE
+    ON Secrets
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
 CREATE TABLE IF NOT EXISTS LoginAudit
 (
-    id              uuid      NOT NULL DEFAULT uuid_generate_v4(),
-    login_method    VARCHAR   NOT NULL,
-    client_id       uuid      NOT NULL REFERENCES Accounts (id),
-    created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
-    message         TEXT      NULL,
-    ip              VARCHAR   NULL,
-    ua              VARCHAR   NULL,
+    id           uuid      NOT NULL DEFAULT uuid_generate_v4(),
+    login_method VARCHAR   NOT NULL,
+    client_id    uuid      NOT NULL REFERENCES Accounts (id),
+    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    message      TEXT      NULL,
+    ip           VARCHAR   NULL,
+    ua           VARCHAR   NULL,
     PRIMARY KEY (id)
 );
 
@@ -53,7 +52,7 @@ CREATE TABLE IF NOT EXISTS AccountStateAudit
     prev_state VARCHAR   NOT NULL,
     curr_state VARCHAR   NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    account_id uuid      NOT NULL REFERENCES Accounts(id),
+    account_id uuid      NOT NULL REFERENCES Accounts (id),
     updated_by uuid      NOT NULL REFERENCES Accounts (id),
     PRIMARY KEY (account_id, created_at, prev_state, curr_state)
 );
@@ -63,20 +62,35 @@ CREATE TABLE IF NOT EXISTS AccountStateAudit
 
 CREATE TABLE IF NOT EXISTS Users
 (
-    id          uuid DEFAULT uuid_generate_v4(),
-    username    VARCHAR NOT NULL UNIQUE,
-    password    VARCHAR NOT NULL,
-    name        VARCHAR NULL,
-    email       VARCHAR NULL,
-    account_id  uuid    NOT NULL REFERENCES Accounts (id),
+    id         uuid DEFAULT uuid_generate_v4(),
+    username   VARCHAR NOT NULL UNIQUE,
+    password   VARCHAR NOT NULL,
+    name       VARCHAR NULL,
+    email      VARCHAR NULL,
+    account_id uuid    NOT NULL REFERENCES Accounts (id),
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS Machines
 (
-    id          uuid DEFAULT uuid_generate_v4(),
-    codename    VARCHAR NOT NULL UNIQUE,
-    name        VARCHAR NULL,
-    account_id  uuid NOT NULL REFERENCES Accounts (id),
+    id         uuid DEFAULT uuid_generate_v4(),
+    codename   VARCHAR NOT NULL UNIQUE,
+    name       VARCHAR NULL,
+    account_id uuid    NOT NULL REFERENCES Accounts (id),
+    PRIMARY KEY (id)
 );
+
+
+-- Helper tables
+
+CREATE TABLE IF NOT EXISTS ForgotPasswordCodes
+(
+    id         uuid               DEFAULT uuid_generate_v4(),
+    code       VARCHAR   NOT NULL,
+    user_id    uuid      NOT NULL REFERENCES Users (id),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    used_at    timestamp NULL,
+    primary key (user_id, id)
+);
+
 
