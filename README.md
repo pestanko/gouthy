@@ -21,4 +21,14 @@ CLI tool documentation can be found [here](https://github.com/golang-migrate/mig
 migrate create -ext sql -dir db/migrations/psql <name>
 ```
 
+#### Run the migration on the testing env
 
+```bash
+migrate -database 'postgres://postgres:postgres@localhost:5432/gouthy?sslmode=disable' -path db/migrations/psql up
+```
+
+#### Discard all the migrations
+
+```bash
+migrate -database 'postgres://postgres:postgres@localhost:5432/gouthy?sslmode=disable' -path db/migrations/psql down
+```

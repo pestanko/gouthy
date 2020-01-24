@@ -1,9 +1,9 @@
-DROP TRIGGER SetUpdated_Clients;
-DROP TRIGGER SetUpdated_Secrets;
-DROP TABLE Accounts;
-DROP TABLE Secrets;
-DROP TABLE LastLoginAudit;
-DROP TABLE AccountStateAudit;
+DROP TRIGGER IF EXISTS SetUpdated_Clients;
+DROP TRIGGER IF EXISTS SetUpdated_Secrets;
+DROP TABLE IF EXISTS Accounts;
+DROP TABLE IF EXISTS Secrets;
+DROP TABLE IF EXISTS LastLoginAudit;
+DROP TABLE IF EXISTS AccountStateAudit;
 
-DROP TABLE Users;
-DROP TABLE Machines;
+DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Machines;

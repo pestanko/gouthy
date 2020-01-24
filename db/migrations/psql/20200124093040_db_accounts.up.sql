@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS Accounts
     PRIMARY KEY (id)
 );
 
-CREATE IF NOT EXISTS TRIGGER SetUpdated_Clients
+CREATE TRIGGER SetUpdated_Clients
     BEFORE UPDATE
     ON Accounts
     FOR EACH ROW
@@ -31,19 +31,20 @@ CREATE TABLE IF NOT EXISTS Secrets
     PRIMARY KEY (id, account_id)
 );
 
-CREATE TRIGGER IF NOT EXISTS SetUpdated_Secrets
-    BEFORE UPDATE
-    ON Secrets
+CREATE TRIGGER SetUpdated_Secrets
+    BEFORE UPDATE ON Secrets
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
-CREATE TABLE IF NOT EXISTS LastLoginAudit
+CREATE TABLE IF NOT EXISTS LoginAudit
 (
     id              uuid      NOT NULL DEFAULT uuid_generate_v4(),
     login_method    VARCHAR   NOT NULL,
     client_id       uuid      NOT NULL REFERENCES Accounts (id),
     created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
     message         TEXT      NULL,
+    ip              VARCHAR   NULL,
+    ua              VARCHAR   NULL,
     PRIMARY KEY (id)
 );
 
@@ -52,8 +53,8 @@ CREATE TABLE IF NOT EXISTS AccountStateAudit
     prev_state VARCHAR   NOT NULL,
     curr_state VARCHAR   NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    account_id uuid      NOT NULL REFERENCES Accounts(id)
-    updated_by uuid      NOT NULL REFERENCES Accounts (id)
+    account_id uuid      NOT NULL REFERENCES Accounts(id),
+    updated_by uuid      NOT NULL REFERENCES Accounts (id),
     PRIMARY KEY (account_id, created_at, prev_state, curr_state)
 );
 
