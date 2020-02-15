@@ -3,8 +3,6 @@ package models
 import (
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
-
 	"time"
 )
 
@@ -28,6 +26,3 @@ type ForgotPasswordCode struct {
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	UsedAt    time.Time `gorm:"type:timestamp" json:"used_at"`
 }
-
-
-

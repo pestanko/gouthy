@@ -9,7 +9,7 @@ import (
 type Account struct {
 	gorm.Model
 	ID           uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
-	EntityId    uuid.UUID `gorm:"type:uuid" json:"entity_id"`
+	EntityId     uuid.UUID `gorm:"type:uuid" json:"entity_id"`
 	AccountType  string    `gorm:"type:varchar" json:"account_type"`
 	AccountState string    `gorm:"type:varchar" json:"account_state"`
 	CreatedAt    time.Time `gorm:"type:timestamp" json:"created_at"`
@@ -25,4 +25,8 @@ type Secret struct {
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
 	ExpiresAt time.Time `gorm:"type:timestamp" json:"expires_at"`
+}
+
+func NewAccount() *Account {
+	return &Account{ AccountState: "created" }
 }
