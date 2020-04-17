@@ -7,7 +7,7 @@ import (
 
 type Application struct {
 	DB       gorm.DB
-	Accounts services.AccountsService
+	Accounts services.EntitiesService
 	Users    services.UsersService
 	Secrets  services.SecretsService
 }

@@ -7,65 +7,55 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type AccountsService struct {
-	DB gorm.DB
+type EntitiesService struct {
+	DB     *gorm.DB
 	common CommonService
 }
 
 type SecretsService struct {
-	DB gorm.DB
+	DB     *gorm.DB
 	common CommonService
 }
 
-func NewAccountsService(db gorm.DB) AccountsService {
-	return AccountsService{DB: db, common: NewCommonService(db, "Account") }
+func NewAccountsService(db *gorm.DB) EntitiesService {
+	return EntitiesService{DB: db, common: NewCommonService(db, "Account")}
 }
 
-func NewSecretsService(db gorm.DB) SecretsService {
+func NewSecretsService(db *gorm.DB) SecretsService {
 	return SecretsService{DB: db, common: NewCommonService(db, "Secret")}
 }
 
-func (service *AccountsService) Create(account *models.Account) error {
-	return service.common.Create(account)
+func (service *EntitiesService) Create(entity *models.Entity) error {
+	return service.common.Create(entity)
 }
 
-func (service *AccountsService) Update(account *models.Account) error {
-	return service.common.Update(account)
+func (service *EntitiesService) Update(entity *models.Entity) error {
+	return service.common.Update(entity)
 
 }
 
-func (service *AccountsService) Delete(account *models.Account) error {
-	return service.common.Delete(account)
+func (service *EntitiesService) Delete(entity *models.Entity) error {
+	return service.common.Delete(entity)
 }
 
-func (service *AccountsService) List() ([]models.Account, error) {
-	var accounts []models.Account
-	result := service.DB.Find(&accounts)
+func (service *EntitiesService) List() ([]models.Entity, error) {
+	var entities []models.Entity
+	result := service.DB.Find(&entities)
 	if result.Error != nil {
 		log.Error("List failed: {}", result.Error)
 		return nil, result.Error
 	}
-	return accounts, nil
+	return entities, nil
 }
 
-func (service *AccountsService) FindByID(id uuid.UUID) (*models.Account, error) {
-	var account models.Account
-	result := service.DB.Find(&account).Where("id = ?", id)
+func (service *EntitiesService) FindByID(id uuid.UUID) (*models.Entity, error) {
+	var entity models.Entity
+	result := service.DB.Find(&entity).Where("id = ?", id)
 	if result.Error != nil {
-		log.Error("Find for id {} failed: {}", id, result.Error)
+		log.WithFields(log.Fields{
+			"id": id,
+		}).WithError(result.Error).Error("Find Failed", id)
 		return nil, result.Error
 	}
-	return &account, nil
+	return &entity, nil
 }
-
-func (service *AccountsService) FindByEntityId(id uuid.UUID) (*models.Account, error) {
-	var account models.Account
-	result := service.DB.Find(&account).Where("entity_id = ?", id)
-	if result.Error != nil {
-		log.Error("Find for entity_id {} failed: {}", id, result.Error)
-		return nil, result.Error
-	}
-	return &account, nil
-}
-
-
