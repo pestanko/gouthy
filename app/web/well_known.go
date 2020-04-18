@@ -3,6 +3,7 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/web/utils"
 )
 
 type WellKnownController struct {
@@ -13,8 +14,8 @@ func CreateWellKnownController(app *core.GouthyApp) *WellKnownController {
 	return &WellKnownController{App: app}
 }
 
-func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []Controller {
-	var controllers = []Controller{
+func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []utils.Controller {
+	var controllers = []utils.Controller{
 		CreateWellKnownController(a),
 	}
 

@@ -24,7 +24,7 @@ func (c *UsersController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 func (c *UsersController) GetOne(context *gin.Context) {
-	id := context.Param("id")
+	//id := context.Param("id")
 
 }
 

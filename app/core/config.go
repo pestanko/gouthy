@@ -22,6 +22,7 @@ type DBConfig struct {
 	User     string `json:"user" yaml:"user" mapstructure:"user"`
 	Password string `json:"password" yaml:"password" mapstructure:"password"`
 	DBName   string `json:"dbname" yaml:"dbname" mapstructure:"dbname"`
+	SSLMode   string `json:"sslmode" yaml:"sslmode" mapstructure:"sslmode"`
 }
 
 type ServerConfig struct {

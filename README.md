@@ -32,3 +32,9 @@ migrate -database 'postgres://postgres:postgres@localhost:5432/gouthy?sslmode=di
 ```bash
 migrate -database 'postgres://postgres:postgres@localhost:5432/gouthy?sslmode=disable' -path db/migrations/psql down
 ```
+
+### Create a new user
+
+```bash
+go run main.go add-user -u admin -e "admin@localhost" -n "Admin User"
+```

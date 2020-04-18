@@ -1,22 +1,20 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
 type Entity struct {
-	gorm.Model
 	ID          uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
-	EntityType  string    `gorm:"type:varchar" json:"account_type"`
-	EntityState string    `gorm:"type:varchar" json:"account_state"`
+	EntityType  string    `gorm:"type:varchar" json:"entity_type"`
+	EntityState string    `gorm:"type:varchar" json:"entity_state"`
 	CreatedAt   time.Time `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"type:timestamp" json:"updated_at"`
+	DeletedAt   time.Time `gorm:"type:timestamp" json:"deleted_at"`
 }
 
 type Secret struct {
-	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
 	EntityId  uuid.UUID `gorm:"type:uuid" json:"entity_id"`
 	Name      string    `gorm:"varchar" json:"name"`
@@ -27,7 +25,6 @@ type Secret struct {
 }
 
 type AutomaticSecurityCodes struct {
-	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
 	Code      string    `gorm:"type:varchar" json:"code"`
 	EntityId  uuid.UUID `gorm:"type:uuid" json:"entity_id"`
@@ -41,5 +38,5 @@ func NewEntity() *Entity {
 
 // Entities is not Entitys
 func (Entity) TableName() string {
-	return "Entities"
+	return "entities"
 }

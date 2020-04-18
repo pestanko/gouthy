@@ -4,7 +4,8 @@ db:
   user: postgres
   password: postgres
   dbname: gouthy
+  sslmode: disable
 
 server:
-  port: 5000
+  port: ':5000'
 

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/utils"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -10,7 +9,6 @@ import (
 )
 
 type User struct {
-	gorm.Model
 	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`

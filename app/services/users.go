@@ -112,7 +112,7 @@ func (s *UserServiceImpl) UpdatePassword(id uuid.UUID, password *UpdatePassword)
 		return err
 	}
 
-	if user.CheckPassword(password.CurrentPassword) {
+	if password.CurrentPassword != "" && user.CheckPassword(password.CurrentPassword) {
 		return fmt.Errorf("current password does not match")
 	}
 

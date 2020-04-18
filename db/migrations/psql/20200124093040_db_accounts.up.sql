@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS Entities
 
     created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at   TIMESTAMP NULL,
     PRIMARY KEY (id)
 );
 

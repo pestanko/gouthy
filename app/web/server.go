@@ -11,10 +11,6 @@ type WebServer struct {
 	App    *core.GouthyApp
 }
 
-type Controller interface {
-	RegisterRoutes(router *gin.RouterGroup)
-}
-
 func CreateWebServer(application *core.GouthyApp) WebServer {
 	router := gin.Default()
 
@@ -25,7 +21,7 @@ func CreateWebServer(application *core.GouthyApp) WebServer {
 }
 
 func (s *WebServer) Serve() error {
-	return s.Router.Run()
+	return s.Router.Run(s.App.Config.Server.Port)
 }
 
 func (s *WebServer) Run() error {
