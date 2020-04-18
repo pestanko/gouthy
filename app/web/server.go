@@ -43,3 +43,4 @@ func (s *WebServer) RegisterRoutes() error {
 
 	return nil
 }
+

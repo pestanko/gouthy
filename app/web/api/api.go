@@ -3,11 +3,11 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/utils"
+	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func RegisterApiControllers(a *core.GouthyApp, r *gin.RouterGroup) []utils.Controller {
-	var controllers = []utils.Controller{
+func RegisterApiControllers(a *core.GouthyApp, r *gin.RouterGroup) []web_utils.Controller {
+	var controllers = []web_utils.Controller{
 		CreateAuthController(a),
 		CreateUsersController(a),
 	}

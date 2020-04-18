@@ -16,15 +16,16 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web"
+	"github.com/pestanko/gouthy/app/services"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
 )
 
-// serveCmd represents the serve command
-var serveCmd = &cobra.Command{
-	Use:   "serve",
+// setPasswordCmd represents the setPassword command
+var setPasswordCmd = &cobra.Command{
+	Use:   "set-password",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -33,29 +34,36 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		helpers.BindAppContext(runServe, cmd, args)
+		helpers.BindAppContext(setPassword, cmd, args)
 	},
 }
 
-func runServe(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
-	webServer := web.CreateWebServer(app)
+func setPassword(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
+	var user = args[0]
+	fmt.Printf("Set a new password for %s: \n", user)
 
-	if err := webServer.Run(); err != nil {
+	newPassword, err := helpers.RequestPassword()
+	if err != nil {
 		return err
 	}
-	return nil
+
+	userInstance, err := app.Services.Users.GetByUsername(user)
+	if err != nil {
+		return err
+	}
+	return app.Services.Users.UpdatePassword(userInstance.ID, &services.UpdatePassword{NewPassword: newPassword})
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(setPasswordCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// setPasswordCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// setPasswordCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
