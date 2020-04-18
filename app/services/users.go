@@ -9,10 +9,15 @@ import (
 	"time"
 )
 
-type NewUser struct {
+type UserBase struct {
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
+	ID       uuid.UUID `json:"id"`
+}
+
+type NewUser struct {
+	UserBase
 	Password string `json:"password"`
 }
 
@@ -28,18 +33,13 @@ type UpdatePassword struct {
 }
 
 type ListUser struct {
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	ID       uuid.UUID `json:"id"`
+	UserBase
 }
 
 type UserDTO struct {
-	ID        uuid.UUID `json:"id"`
+	UserBase
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	Username  string    `json:"username"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
 }
 
 type UsersService interface {
@@ -48,8 +48,9 @@ type UsersService interface {
 	Delete(userId uuid.UUID) error
 	UpdatePassword(userId uuid.UUID, password *UpdatePassword) error
 	List() ([]ListUser, error)
-	Get(userId uuid.UUID) (UserDTO, error)
-	GetByUsername(userId string) (UserDTO, error)
+	Get(userId uuid.UUID) (*UserDTO, error)
+	GetByUsername(userId string) (*UserDTO, error)
+	GetByAnyId(sid string) (*UserDTO, error)
 }
 
 type UserServiceImpl struct {
@@ -143,20 +144,28 @@ func (s *UserServiceImpl) List() ([]ListUser, error) {
 	return listUsers, err
 }
 
-func (s *UserServiceImpl) Get(id uuid.UUID) (UserDTO, error) {
+func (s *UserServiceImpl) Get(id uuid.UUID) (*UserDTO, error) {
 	var user, err = s.users.FindByID(id)
 	if err != nil {
-		return UserDTO{}, err
+		return nil, err
 	}
 
 	return ConvertModelsToUserDTO(user), nil
 }
 
-func (s *UserServiceImpl) GetByUsername(username string) (UserDTO, error) {
+func (s *UserServiceImpl) GetByUsername(username string) (*UserDTO, error) {
 	var user, err = s.users.FindByUsername(username)
 	if err != nil {
-		return UserDTO{}, err
+		return nil, err
 	}
 
 	return ConvertModelsToUserDTO(user), nil
+}
+
+func (s *UserServiceImpl) GetByAnyId(sid string) (*UserDTO, error) {
+	var uid, err = uuid.FromString(sid)
+	if err == nil {
+		return s.Get(uid)
+	}
+	return s.GetByUsername(sid)
 }

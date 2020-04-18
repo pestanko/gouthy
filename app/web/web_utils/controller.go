@@ -83,7 +83,7 @@ func (r *RouterWrapper) createFuncHandler(f HandlerFunc) func(gc *gin.Context) {
 		ctx, err := r.CreateControllerContext(gc)
 
 		if err = f(ctx); err != nil {
-
+			ctx.WriteErr(err)
 		}
 	}
 }

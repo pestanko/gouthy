@@ -30,11 +30,16 @@ func (r *UsersRepository) Delete(user *models.User) error {
 
 func (r *UsersRepository) FindByID(id uuid.UUID) (*models.User, error) {
 	var user models.User
-	result := r.DB.Find(&user).Where("id = ?", id)
+	result := r.DB.Where("id = ?", id).Find(&user)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
 			"id": id,
 		}).WithError(result.Error).Error("Find Failed")
+
+		if gorm.IsRecordNotFoundError(result.Error) {
+			return nil, nil
+		}
+
 		return nil, result.Error
 	}
 	return &user, nil
@@ -49,11 +54,16 @@ func (r *UsersRepository) List() ([]models.User, error) {
 
 func (r *UsersRepository) FindByUsername(username string) (*models.User, error) {
 	var user models.User
-	result := r.DB.Find(&user).Where("username = ?", username)
+	result := r.DB.Where("username = ?", username).Find(&user)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
 			"username": username,
 		}).WithError(result.Error).Error("Find Failed")
+
+		if gorm.IsRecordNotFoundError(result.Error) {
+			return nil, nil
+		}
+
 		return nil, result.Error
 	}
 	return &user, nil

@@ -9,22 +9,33 @@ func ConvertModelsToUserList(list []models.User) []ListUser {
 
 	for _, user := range list {
 		item := ListUser{
-			Username: user.Username,
-			Email:    user.Email,
-			ID:       user.ID,
+			UserBase: *ConvertModelToUserBase(&user),
 		}
 		listUsers = append(listUsers, item)
 	}
 	return listUsers
 }
 
-func ConvertModelsToUserDTO(user *models.User) UserDTO {
-	return UserDTO{
-		ID:        user.ID,
+func ConvertModelToUserBase(user *models.User) *UserBase {
+	if user == nil {
+		return nil
+	}
+
+	return &UserBase{
+		Username: user.Username,
+		Name:     user.Name,
+		Email:    user.Email,
+		ID:       user.ID,
+	}
+}
+
+func ConvertModelsToUserDTO(user *models.User) *UserDTO {
+	if user == nil {
+		return nil
+	}
+	return &UserDTO{
+		UserBase:  *ConvertModelToUserBase(user),
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-		Username:  user.Username,
-		Name:      user.Name,
-		Email:     user.Email,
 	}
 }
