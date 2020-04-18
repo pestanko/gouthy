@@ -4,12 +4,20 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"github.com/pestanko/gouthy/app/services"
 )
+
 
 type GouthyApp struct {
 	Config *AppConfig
 	DB     *gorm.DB
 }
+
+type Services struct {
+	Auth *services.AuthService
+	Users *services.UsersService
+}
+
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
 	return gorm.Open(
@@ -22,4 +30,12 @@ func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
 // GetApplication - gets an application instance
 func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
 	return GouthyApp{Config: config}, nil
+}
+
+
+func RegisterServices(app *GouthyApp) Services {
+	return Services{
+		Auth: services.NewAuthService(),
+		Users: services.NewUsersService(app.DB),
+	}
 }

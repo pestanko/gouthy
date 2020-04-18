@@ -11,7 +11,8 @@ import (
 
 // Config - Application config
 type AppConfig struct {
-	DB DBConfig `json:"db" yaml:"db" mapstructure:"db"`
+	DB     DBConfig     `json:"db" yaml:"db" mapstructure:"db"`
+	Server ServerConfig `json:"server" yaml:"server" mapstructure:"server"`
 }
 
 //DBConfig - Database config
@@ -21,6 +22,10 @@ type DBConfig struct {
 	User     string `json:"user" yaml:"user" mapstructure:"user"`
 	Password string `json:"password" yaml:"password" mapstructure:"password"`
 	DBName   string `json:"dbname" yaml:"dbname" mapstructure:"dbname"`
+}
+
+type ServerConfig struct {
+	Port string `json:"port" yaml:"port" mapstructure:"port"`
 }
 
 const IsStatConfigName = "gouthy-config"

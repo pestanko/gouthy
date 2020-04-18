@@ -17,8 +17,10 @@ package cmd
 
 import (
 	"fmt"
-
+	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/web"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // serveCmd represents the serve command
@@ -31,9 +33,37 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
-	},
+	Run: runServe,
+}
+
+func runServe(cmd *cobra.Command, args []string) {
+	var err error
+	config, err := core.GetAppConfig()
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
+	}
+
+	db, err := core.GetDBConnection(&config)
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
+	}
+
+	defer db.Close()
+
+	app, err := core.GetApplication(&config, db)
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
+	}
+
+	webServer := web.CreateWebServer(&app)
+
+	if err = webServer.Run(); err != nil {
+		fmt.Printf("error: %v", err)
+		os.Exit(1)
+	}
 }
 
 func init() {

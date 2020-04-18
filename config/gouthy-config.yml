@@ -4,3 +4,7 @@ db:
   user: postgres
   password: postgres
   dbname: gouthy
+
+server:
+  port: 5000
+
