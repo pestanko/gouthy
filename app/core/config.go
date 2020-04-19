@@ -13,6 +13,7 @@ import (
 type AppConfig struct {
 	DB     DBConfig     `json:"db" yaml:"db" mapstructure:"db"`
 	Server ServerConfig `json:"server" yaml:"server" mapstructure:"server"`
+	Jwk    JwkConfig    `json:"jwk" yaml:"jwk" mapstructure:"jwk"`
 }
 
 //DBConfig - Database config
@@ -22,11 +23,15 @@ type DBConfig struct {
 	User     string `json:"user" yaml:"user" mapstructure:"user"`
 	Password string `json:"password" yaml:"password" mapstructure:"password"`
 	DBName   string `json:"dbname" yaml:"dbname" mapstructure:"dbname"`
-	SSLMode   string `json:"sslmode" yaml:"sslmode" mapstructure:"sslmode"`
+	SSLMode  string `json:"sslmode" yaml:"sslmode" mapstructure:"sslmode"`
 }
 
 type ServerConfig struct {
 	Port string `json:"port" yaml:"port" mapstructure:"port"`
+}
+
+type JwkConfig struct {
+	Keys string `json:"keys"`
 }
 
 const IsStatConfigName = "gouthy-config"

@@ -7,39 +7,86 @@ import (
 )
 
 type AuthController struct {
-	App *core.GouthyApp
+	App  *core.GouthyApp
+	http *web_utils.HTTPTools
 }
 
-func CreateAuthController(app *core.GouthyApp) *AuthController {
-	return &AuthController{App: app}
+func NewAuthController(app *core.GouthyApp) *AuthController {
+	return &AuthController{App: app, http: web_utils.NewHTTPTools(app)}
 }
 
-func (c *AuthController) RegisterRoutes(router *gin.RouterGroup) {
-	route := c.newRouterController(router)
+func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) web_utils.Controller {
+	loginRoute := authRoute.Group("/login")
+	authRoute.POST("/register", ctrl.Register)
+	loginRoute.POST("/login/password", ctrl.LoginPassword)
+	loginRoute.POST("/login/secret", ctrl.LoginSecret)
 
-	route.POST("/login/password", c.LoginPassword)
-	route.POST("/login/secret", c.LoginSecret)
-	route.POST("/register", c.Register)
+	oauth2Route := authRoute.Group("/oauth2")
+	oauth2Route.GET("/authorize", ctrl.OAuth2AuthorizeEndpoint)
+	oauth2Route.POST("/token", ctrl.OAuth2TokenEndpoint)
+	oauth2Route.GET("/userinfo", ctrl.OAuth2UserInfoEndpoint)
+	oauth2Route.GET("/certs", ctrl.OAuth2CertificatesEndpoint)
+
+	return ctrl
 }
 
-func (c *AuthController) newRouterController(router *gin.RouterGroup) web_utils.RouterWrapper {
-	route := router.Group("/auth")
-
-	r := web_utils.NewRouteController(route, c.App)
-	return r
+type PasswordLoginDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-func (c *AuthController) LoginSecret(context *web_utils.ControllerContext) error {
+func (ctrl *AuthController) LoginPassword(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
+	var loginDTO PasswordLoginDTO
+	if err := ctx.Gin.BindJSON(&loginDTO); err != nil {
+		ctx.WriteErr(err)
+		return
+	}
+	username := loginDTO.Username
+	user, err := ctrl.App.Services.Users.GetByUsername(username)
+	if err != nil {
+		ctx.WriteErr(err)
+		return
+	}
 
-	return nil
+	if user != nil {
+		ctx.Gin.JSON(401, gin.H{
+			"status":   "not_found",
+			"code":     401,
+			"message":  "User not found",
+			"username": username,
+		})
+		return
+	}
+
+	if user.CheckPassword(loginDTO.Password) {
+
+	}
+
+	response := ctx.App.Services.Auth.LoginByID(user.ID)
+	ctx.JSON(200, response)
 }
 
-func (c *AuthController) Register(context *web_utils.ControllerContext) error {
+func (ctrl *AuthController) LoginSecret(context *gin.Context) {
 
-	return nil
 }
 
-func (c *AuthController) LoginPassword(context *web_utils.ControllerContext) error {
+func (ctrl *AuthController) Register(context *gin.Context) {
 
-	return nil
+}
+
+func (ctrl *AuthController) OAuth2AuthorizeEndpoint(context *gin.Context) {
+
+}
+
+func (ctrl *AuthController) OAuth2TokenEndpoint(context *gin.Context) {
+
+}
+
+func (ctrl *AuthController) OAuth2UserInfoEndpoint(context *gin.Context) {
+
+}
+
+func (ctrl *AuthController) OAuth2CertificatesEndpoint(context *gin.Context) {
+
 }

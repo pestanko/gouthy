@@ -1,4 +1,4 @@
---- Account is the "Accountable entity", can be ether USER or MACHINE
+--- Entity can be ether USER or MACHINE
 CREATE TABLE IF NOT EXISTS Entities
 (
     id           uuid               DEFAULT uuid_generate_v4(),

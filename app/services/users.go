@@ -10,9 +10,9 @@ import (
 )
 
 type UserBase struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
+	Username string    `json:"username"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
 	ID       uuid.UUID `json:"id"`
 }
 
@@ -48,9 +48,9 @@ type UsersService interface {
 	Delete(userId uuid.UUID) error
 	UpdatePassword(userId uuid.UUID, password *UpdatePassword) error
 	List() ([]ListUser, error)
-	Get(userId uuid.UUID) (*UserDTO, error)
-	GetByUsername(userId string) (*UserDTO, error)
-	GetByAnyId(sid string) (*UserDTO, error)
+	Get(userId uuid.UUID) (*models.User, error)
+	GetByUsername(userId string) (*models.User, error)
+	GetByAnyId(sid string) (*models.User, error)
 }
 
 type UserServiceImpl struct {
@@ -144,25 +144,25 @@ func (s *UserServiceImpl) List() ([]ListUser, error) {
 	return listUsers, err
 }
 
-func (s *UserServiceImpl) Get(id uuid.UUID) (*UserDTO, error) {
+func (s *UserServiceImpl) Get(id uuid.UUID) (*models.User, error) {
 	var user, err = s.users.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return ConvertModelsToUserDTO(user), nil
+	return user, nil
 }
 
-func (s *UserServiceImpl) GetByUsername(username string) (*UserDTO, error) {
+func (s *UserServiceImpl) GetByUsername(username string) (*models.User, error) {
 	var user, err = s.users.FindByUsername(username)
 	if err != nil {
 		return nil, err
 	}
 
-	return ConvertModelsToUserDTO(user), nil
+	return user, nil
 }
 
-func (s *UserServiceImpl) GetByAnyId(sid string) (*UserDTO, error) {
+func (s *UserServiceImpl) GetByAnyId(sid string) (*models.User, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
 		return s.Get(uid)

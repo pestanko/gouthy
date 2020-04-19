@@ -26,8 +26,9 @@ func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []web_u
 	return controllers
 }
 
-func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup) {
+func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup) web_utils.Controller {
 	route.GET("/openid-configuration", c.OpenIdConfigurationEndpoint)
+	return c
 }
 
 func (c *WellKnownController) OpenIdConfigurationEndpoint(context *gin.Context) {

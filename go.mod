@@ -14,5 +14,6 @@ require (
 	github.com/spf13/viper v1.6.2
 	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	gopkg.in/square/go-jose.v2 v2.5.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )

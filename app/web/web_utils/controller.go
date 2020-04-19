@@ -3,94 +3,60 @@ package web_utils
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
+	uuid "github.com/satori/go.uuid"
 )
 
-type HandlerFunc func(ctx *ControllerContext) error
-
 type Controller interface {
-	RegisterRoutes(router *gin.RouterGroup)
+	RegisterRoutes(router *gin.RouterGroup) Controller
 }
 
-type RouterWrapper struct {
-	Route *gin.RouterGroup
-	App   *core.GouthyApp
+type StandardResponses struct {
+
 }
 
-func NewRouteController(route *gin.RouterGroup, app *core.GouthyApp) RouterWrapper {
-	return RouterWrapper{Route: route, App: app}
+type HTTPTools struct {
+	App *core.GouthyApp
 }
 
-// GET is a shortcut for router.Handle("GET", path, handle).
-func (r *RouterWrapper) GET(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.GET(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) POST(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.POST(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) PATCH(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.PATCH(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) PUT(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.PUT(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) HEAD(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.HEAD(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) DELETE(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.DELETE(relativePath, funcs...)
-}
-
-// POST is a shortcut for router.Handle("POST", path, handle).
-func (r *RouterWrapper) OPTIONS(relativePath string, handlers ...HandlerFunc) gin.IRoutes {
-	funcs := r.wrapFunctions(handlers)
-
-	return r.Route.OPTIONS(relativePath, funcs...)
-}
-
-func (r *RouterWrapper) wrapFunctions(handlers []HandlerFunc) []gin.HandlerFunc {
-	var funcs []gin.HandlerFunc
-
-	for _, f := range handlers {
-		funcs = append(funcs, r.createFuncHandler(f))
-	}
-	return funcs
-}
-
-func (r *RouterWrapper) createFuncHandler(f HandlerFunc) func(gc *gin.Context) {
-	return func(gc *gin.Context) {
-		ctx, err := r.CreateControllerContext(gc)
-
-		if err = f(ctx); err != nil {
-			ctx.WriteErr(err)
-		}
+func NewHTTPTools(app *core.GouthyApp) *HTTPTools {
+	return &HTTPTools{
+		App: app,
 	}
 }
 
-func (r *RouterWrapper) CreateControllerContext(gc *gin.Context) (*ControllerContext, error) {
-	return &ControllerContext{
-		Gin: gc,
-		App: r.App,
-	}, nil
+func (http *HTTPTools) NewControllerContext(gin *gin.Context) *ControllerContext {
+	return &ControllerContext{Gin: gin, App: http.App}
 }
+
+
+type ControllerContext struct {
+	Gin *gin.Context
+	App *core.GouthyApp
+	Responses StandardResponses
+}
+
+func (ctx *ControllerContext) JSON(code int, obj interface{}) {
+	ctx.Gin.JSON(code, obj)
+}
+
+func (ctx *ControllerContext) Fail(err ApiError) {
+	ctx.JSON(err.Code, err)
+}
+
+func (ctx *ControllerContext) WriteError(err string, message string, code int) {
+	ctx.Fail(NewApiError(err, message, code))
+}
+
+func (ctx *ControllerContext) WriteErr(err error) {
+	ctx.Fail(NewApiError("server_error", err.Error(), 500))
+}
+
+func (ctx *ControllerContext) ParseUUID(id string) (uuid.UUID, error) {
+	return uuid.FromString(id)
+}
+
+func (ctx *ControllerContext) Param(key string) string {
+	return ctx.Gin.Param(key)
+}
+
+

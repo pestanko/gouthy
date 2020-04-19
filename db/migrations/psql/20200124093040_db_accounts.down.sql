@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Machines;
 
 DROP TABLE IF EXISTS AutomaticSecurityCodes;
-DROP TABLE IF EXISTS AccountStateAudit;
+DROP TABLE IF EXISTS EnityStateAudit;
 
 DROP TRIGGER IF EXISTS SetUpdated_Secrets;
 DROP TRIGGER IF EXISTS SetUpdated_Entities;

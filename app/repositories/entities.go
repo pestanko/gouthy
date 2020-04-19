@@ -18,7 +18,7 @@ type SecretsService struct {
 }
 
 func NewEntitiesRepository(db *gorm.DB) EntitiesRepository {
-	return EntitiesRepository{DB: db, common: NewCommonService(db, "Account")}
+	return EntitiesRepository{DB: db, common: NewCommonService(db, "Entity")}
 }
 
 func NewSecretsRepository(db *gorm.DB) SecretsService {

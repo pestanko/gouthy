@@ -9,3 +9,6 @@ db:
 server:
   port: ':5000'
 
+
+jwk:
+  keys: './data/jwks'

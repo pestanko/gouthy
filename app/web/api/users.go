@@ -8,116 +8,125 @@ import (
 )
 
 type UsersController struct {
-	App *core.GouthyApp
+	App  *core.GouthyApp
+	http *web_utils.HTTPTools
 }
 
-func CreateUsersController(app *core.GouthyApp) *UsersController {
-	return &UsersController{App: app}
+func NewUsersController(app *core.GouthyApp) *UsersController {
+	return &UsersController{App: app, http: web_utils.NewHTTPTools(app)}
 }
 
-func (c *UsersController) RegisterRoutes(router *gin.RouterGroup) {
-	r := c.newRouterController(router)
+func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
 
-	r.GET("", c.List)
-	r.POST("", c.Create)
-	r.GET("/:id", c.GetOne)
-	r.PUT("/:id", c.Update)
-	r.PATCH("/:id", c.Update)
-	r.DELETE("/:id", c.Delete)
+	r.GET("", ctrl.List)
+	r.POST("", ctrl.Create)
+	r.GET("/:uid", ctrl.GetOne)
+	r.PUT("/:uid", ctrl.Update)
+	r.PATCH("/:uid", ctrl.Update)
+	r.DELETE("/:uid", ctrl.Delete)
+	r.POST("/:uid/password", ctrl.UpdatePassword)
+
+	NewSecretsController(ctrl.App).RegisterRoutes(r.Group("/:uid/secrets"))
+	return ctrl
 }
 
-func (c *UsersController) newRouterController(router *gin.RouterGroup) web_utils.RouterWrapper {
-	route := router.Group("/users")
-
-	r := web_utils.NewRouteController(route, c.App)
-	return r
-}
-
-func (c *UsersController) GetOne(ctx *web_utils.ControllerContext) error {
+func (ctrl *UsersController) GetOne(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
 	sid := ctx.Param("id")
 
-	user, err := c.findUser(ctx, sid)
+	user, err := ctrl.findUser(ctx, sid)
 	if err != nil {
-		return err
+		ctx.WriteErr(err)
+		return
 	}
 
 	if user == nil {
-		return nil
+		return
 	}
 
 	ctx.JSON(200, user)
-
-	return nil
 }
 
-func (c *UsersController) List(ctx *web_utils.ControllerContext) error {
-	users, err := c.App.Services.Users.List()
+func (ctrl *UsersController) List(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
+	users, err := ctrl.App.Services.Users.List()
 	if err != nil {
-		return err
+		ctx.WriteErr(err)
+		return
 	}
 
 	ctx.JSON(200, users)
-
-	return nil
 }
 
-func (c *UsersController) Update(ctx *web_utils.ControllerContext) error {
-	sid := ctx.Param("id")
+func (ctrl *UsersController) Delete(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
+	sid := ctx.Param("uid")
 
-	foundUser, err := c.App.Services.Users.GetByAnyId(sid)
+	foundUser, err := ctrl.App.Services.Users.GetByAnyId(sid)
+	if err != nil {
+		ctx.WriteErr(err)
+		return
+	}
+
+	err = ctrl.App.Services.Users.Delete(foundUser.ID)
+	ctx.Gin.Status(204)
+}
+
+func (ctrl *UsersController) Create(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
+
+	var newUser services.NewUser
+	if err := ctx.Gin.Bind(&newUser); err != nil {
+		ctx.WriteErr(err)
+		return
+	}
+	user, err := ctrl.App.Services.Users.Create(&newUser)
+	if err != nil {
+		ctx.WriteErr(err)
+		return
+	}
+
+	ctx.JSON(201, services.ConvertModelsToUserDTO(&user))
+}
+
+func (ctrl *UsersController) Update(context *gin.Context) {
+	ctx := ctrl.http.NewControllerContext(context)
+	sid := ctx.Param("uid")
+
+	foundUser, err := ctrl.App.Services.Users.GetByAnyId(sid)
 
 	if err != nil {
-		return err
+		ctx.WriteErr(err)
+		return
 	}
 
 	var updateUser services.UpdateUser
 	if err := ctx.Gin.Bind(&updateUser); err != nil {
-		return err
+		ctx.WriteErr(err)
+		return
 	}
-	user, err := c.App.Services.Users.Update(foundUser.ID, &updateUser)
+	user, err := ctrl.App.Services.Users.Update(foundUser.ID, &updateUser)
+
 	if err != nil {
-		return err
+		ctx.WriteErr(err)
+		return
 	}
 
 	ctx.JSON(201, services.ConvertModelsToUserDTO(&user))
-	return nil
+	return
 }
 
-func (c *UsersController) Delete(ctx *web_utils.ControllerContext) error {
-	sid := ctx.Param("id")
+func (ctrl *UsersController) UpdatePassword(context *gin.Context) {
 
-	foundUser, err := c.App.Services.Users.GetByAnyId(sid)
-	if err != nil {
-
-		return err
-	}
-
-	err = c.App.Services.Users.Delete(foundUser.ID)
-	ctx.Gin.Status(204)
-	return err
 }
 
-func (c *UsersController) Create(ctx *web_utils.ControllerContext) error {
-	var newUser services.NewUser
-	if err := ctx.Gin.Bind(&newUser); err != nil {
-		return err
-	}
-	user, err := c.App.Services.Users.Create(&newUser)
-	if err != nil {
-		return err
-	}
-
-	ctx.JSON(201, services.ConvertModelsToUserDTO(&user))
-	return nil
-}
-
-func (c *UsersController) findUser(ctx *web_utils.ControllerContext, sid string) (*services.UserDTO, error) {
-	user, err := c.App.Services.Users.GetByAnyId(sid)
+func (ctrl *UsersController) findUser(ctx *web_utils.ControllerContext, sid string) (*services.UserDTO, error) {
+	user, err := ctrl.App.Services.Users.GetByAnyId(sid)
 	if err != nil {
 		return nil, err
 	}
 	if user == nil {
 		ctx.WriteError("not_found", "User not found", 404)
 	}
-	return user, nil
+	return services.ConvertModelsToUserDTO(user), nil
 }
