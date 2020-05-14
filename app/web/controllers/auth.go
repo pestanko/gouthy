@@ -1,21 +1,21 @@
-package api
+package controllers
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/web_utils"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type AuthController struct {
 	App  *core.GouthyApp
-	http *web_utils.HTTPTools
+	http *shared.HTTPTools
 }
 
 func NewAuthController(app *core.GouthyApp) *AuthController {
-	return &AuthController{App: app, http: web_utils.NewHTTPTools(app)}
+	return &AuthController{App: app, http: shared.NewHTTPTools(app)}
 }
 
-func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) web_utils.Controller {
+func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) shared.Controller {
 	loginRoute := authRoute.Group("/login")
 	authRoute.POST("/register", ctrl.Register)
 	loginRoute.POST("/login/password", ctrl.LoginPassword)

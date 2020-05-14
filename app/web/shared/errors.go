@@ -1,4 +1,4 @@
-package web_utils
+package shared
 
 type ApiError struct {
 	Status  string `json:"error"`

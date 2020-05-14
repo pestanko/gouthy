@@ -1,4 +1,4 @@
-package models
+package entities
 
 import (
 	uuid "github.com/satori/go.uuid"
@@ -12,16 +12,6 @@ type Entity struct {
 	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
 	DeletedAt time.Time `gorm:"type:timestamp" json:"deleted_at"`
-}
-
-type Secret struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
-	EntityId  uuid.UUID `gorm:"type:uuid" json:"entity_id"`
-	Name      string    `gorm:"varchar" json:"name"`
-	Value     string    `gorm:"varchar" json:"-"`
-	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
-	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
-	ExpiresAt time.Time `gorm:"type:timestamp" json:"expires_at"`
 }
 
 type AutomaticSecurityCodes struct {

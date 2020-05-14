@@ -18,7 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/services"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
 )
@@ -51,7 +51,7 @@ func setPassword(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	return app.Services.Users.UpdatePassword(userInstance.ID, &services.UpdatePassword{NewPassword: newPassword})
+	return app.Services.Users.UpdatePassword(userInstance.ID, &users.UpdatePasswordDTO{NewPassword: newPassword})
 }
 
 func init() {

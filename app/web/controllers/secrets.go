@@ -1,21 +1,21 @@
-package api
+package controllers
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/web_utils"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type SecretsController struct {
 	App  *core.GouthyApp
-	http *web_utils.HTTPTools
+	http *shared.HTTPTools
 }
 
 func NewSecretsController(app *core.GouthyApp) *SecretsController {
-	return &SecretsController{App: app, http: web_utils.NewHTTPTools(app)}
+	return &SecretsController{App: app, http: shared.NewHTTPTools(app)}
 }
 
-func (ctrl *SecretsController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *SecretsController) RegisterRoutes(r *gin.RouterGroup) shared.Controller {
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
 	r.GET("/:sid", ctrl.GetOne)

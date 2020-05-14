@@ -1,21 +1,21 @@
-package api
+package controllers
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/web_utils"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type EntitiesController struct {
 	App  *core.GouthyApp
-	http *web_utils.HTTPTools
+	http *shared.HTTPTools
 }
 
 func NewEntitiesController(app *core.GouthyApp) *EntitiesController {
-	return &EntitiesController{App: app, http: web_utils.NewHTTPTools(app)}
+	return &EntitiesController{App: app, http: shared.NewHTTPTools(app)}
 }
 
-func (ctrl *EntitiesController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *EntitiesController) RegisterRoutes(r *gin.RouterGroup) shared.Controller {
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
 	r.GET("/:id", ctrl.GetOne)

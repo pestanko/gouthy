@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/api"
 )
 
 type WebServer struct {
@@ -36,7 +35,7 @@ func (s *WebServer) Run() error {
 func (s *WebServer) RegisterRoutes() error {
 	apiRoute := s.Router.Group("/api")
 	v1Route := apiRoute.Group("/v1")
-	api.RegisterApiControllers(s.App, v1Route)
+	RegisterApiControllers(s.App, v1Route)
 
 	wellKnownRoute := s.Router.Group("./.well-known")
 	RegisterWellKnownControllers(s.App, wellKnownRoute)

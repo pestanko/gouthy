@@ -1,22 +1,22 @@
-package api
+package controllers
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/services"
-	"github.com/pestanko/gouthy/app/web/web_utils"
+	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type UsersController struct {
 	App  *core.GouthyApp
-	http *web_utils.HTTPTools
+	http *shared.HTTPTools
 }
 
 func NewUsersController(app *core.GouthyApp) *UsersController {
-	return &UsersController{App: app, http: web_utils.NewHTTPTools(app)}
+	return &UsersController{App: app, http: shared.NewHTTPTools(app)}
 }
 
-func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) shared.Controller {
 
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
@@ -75,7 +75,7 @@ func (ctrl *UsersController) Delete(context *gin.Context) {
 func (ctrl *UsersController) Create(context *gin.Context) {
 	ctx := ctrl.http.NewControllerContext(context)
 
-	var newUser services.NewUser
+	var newUser users.NewUserDTO
 	if err := ctx.Gin.Bind(&newUser); err != nil {
 		ctx.WriteErr(err)
 		return
@@ -86,7 +86,7 @@ func (ctrl *UsersController) Create(context *gin.Context) {
 		return
 	}
 
-	ctx.JSON(201, services.ConvertModelsToUserDTO(&user))
+	ctx.JSON(201, users.ConvertModelsToUserDTO(&user))
 }
 
 func (ctrl *UsersController) Update(context *gin.Context) {
@@ -100,7 +100,7 @@ func (ctrl *UsersController) Update(context *gin.Context) {
 		return
 	}
 
-	var updateUser services.UpdateUser
+	var updateUser users.UpdateUserDTO
 	if err := ctx.Gin.Bind(&updateUser); err != nil {
 		ctx.WriteErr(err)
 		return
@@ -112,7 +112,7 @@ func (ctrl *UsersController) Update(context *gin.Context) {
 		return
 	}
 
-	ctx.JSON(201, services.ConvertModelsToUserDTO(&user))
+	ctx.JSON(201, users.ConvertModelsToUserDTO(&user))
 	return
 }
 
@@ -120,7 +120,7 @@ func (ctrl *UsersController) UpdatePassword(context *gin.Context) {
 
 }
 
-func (ctrl *UsersController) findUser(ctx *web_utils.ControllerContext, sid string) (*services.UserDTO, error) {
+func (ctrl *UsersController) findUser(ctx *shared.ControllerContext, sid string) (*users.UserDTO, error) {
 	user, err := ctrl.App.Services.Users.GetByAnyId(sid)
 	if err != nil {
 		return nil, err
@@ -128,5 +128,5 @@ func (ctrl *UsersController) findUser(ctx *web_utils.ControllerContext, sid stri
 	if user == nil {
 		ctx.WriteError("not_found", "User not found", 404)
 	}
-	return services.ConvertModelsToUserDTO(user), nil
+	return users.ConvertModelsToUserDTO(user), nil
 }

@@ -3,7 +3,7 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/web/web_utils"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type WellKnownController struct {
@@ -14,8 +14,8 @@ func CreateWellKnownController(app *core.GouthyApp) *WellKnownController {
 	return &WellKnownController{App: app}
 }
 
-func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []web_utils.Controller {
-	var controllers = []web_utils.Controller{
+func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []shared.Controller {
+	var controllers = []shared.Controller{
 		CreateWellKnownController(a),
 	}
 
@@ -26,7 +26,7 @@ func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []web_u
 	return controllers
 }
 
-func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup) web_utils.Controller {
+func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup) shared.Controller {
 	route.GET("/openid-configuration", c.OpenIdConfigurationEndpoint)
 	return c
 }

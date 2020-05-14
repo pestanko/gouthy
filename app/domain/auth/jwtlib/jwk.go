@@ -1,4 +1,4 @@
-package jwtl
+package jwtlib
 
 import (
 	"path"

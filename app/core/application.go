@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/pestanko/gouthy/app/jwtl"
-	"github.com/pestanko/gouthy/app/services"
+	"github.com/pestanko/gouthy/app/domain/auth"
+	"github.com/pestanko/gouthy/app/domain/auth/jwtlib"
+	"github.com/pestanko/gouthy/app/domain/entities"
+	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 type GouthyApp struct {
@@ -15,9 +17,9 @@ type GouthyApp struct {
 }
 
 type Services struct {
-	Auth     *services.AuthService
-	Users    services.UsersService
-	Entities services.EntitiesService
+	Auth     *auth.Facade
+	Users    users.Facade
+	Entities entities.Facade
 }
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
@@ -37,10 +39,10 @@ func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
 }
 
 func RegisterServices(app *GouthyApp) Services {
-	jwkInventory := jwtl.NewJwkInventory(app.Config.Jwk.Keys)
-	users := services.NewUsersService(app.DB)
-	entities := services.NewEntitiesService(app.DB)
-	auth := services.NewAuthService(app.DB, users, entities, jwkInventory)
+	jwkInventory := jwtlib.NewJwkInventory(app.Config.Jwk.Keys)
+	users := users.NewUsersFacade(app.DB)
+	entities := entities.NewEntitiesService(app.DB)
+	auth := auth.NewAuthService(app.DB, users, entities, jwkInventory)
 
 	return Services{
 		Auth:     auth,

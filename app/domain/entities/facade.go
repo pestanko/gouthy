@@ -1,9 +1,7 @@
-package services
+package entities
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/pestanko/gouthy/app/models"
-	"github.com/pestanko/gouthy/app/repositories"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -38,29 +36,27 @@ type EntityDTO struct {
 	DeletedAt time.Time `json:"deleted_at"`
 }
 
-type EntitiesService interface {
+type Facade interface {
 	List() ([]ListEntity, error)
-	Get(userId uuid.UUID) (*models.Entity, error)
+	Get(userId uuid.UUID) (*Entity, error)
 }
 
-type EntitiesServiceImpl struct {
-	users    repositories.UsersRepository
-	entities repositories.EntitiesRepository
-	secrets  repositories.SecretsService
+type FacadeImpl struct {
+	entities Repository
+	secrets  SecretsRepository
 }
 
-func (s EntitiesServiceImpl) List() ([]ListEntity, error) {
+func (s *FacadeImpl) List() ([]ListEntity, error) {
 	panic("implement me")
 }
 
-func (s EntitiesServiceImpl) Get(userId uuid.UUID) (*models.Entity, error) {
+func (s *FacadeImpl) Get(userId uuid.UUID) (*Entity, error) {
 	panic("implement me")
 }
 
-func NewEntitiesService(db *gorm.DB) EntitiesService {
-	return &EntitiesServiceImpl{
-		users:    repositories.NewUsersRepository(db),
-		entities: repositories.NewEntitiesRepository(db),
-		secrets:  repositories.NewSecretsRepository(db),
+func NewEntitiesService(db *gorm.DB) Facade {
+	return &FacadeImpl{
+		entities: NewEntitiesRepository(db),
+		secrets:  NewSecretsRepository(db),
 	}
 }

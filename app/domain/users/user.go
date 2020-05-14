@@ -1,7 +1,7 @@
-package models
+package users
 
 import (
-	"github.com/pestanko/gouthy/app/utils"
+	"github.com/pestanko/gouthy/app/shared/utils"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
@@ -34,4 +34,39 @@ func (user *User) SetPassword(password string) error {
 
 func (user *User) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
+}
+
+
+// DTO
+type UserBaseDTO struct {
+	Username string    `json:"username"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	ID       uuid.UUID `json:"id"`
+}
+
+type NewUserDTO struct {
+	UserBaseDTO
+	Password string `json:"password"`
+}
+
+type UpdateUserDTO struct {
+	Username string `json:"username"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+}
+
+type UpdatePasswordDTO struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+type ListUserDTO struct {
+	UserBaseDTO
+}
+
+type UserDTO struct {
+	UserBaseDTO
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

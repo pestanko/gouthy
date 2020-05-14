@@ -19,12 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pestanko/gouthy/app/core"
-	"github.com/pestanko/gouthy/app/services"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
 )
 
-var user services.NewUser
+var user users.NewUserDTO
 var secret string
 
 // addUserCmd represents the addUser command
@@ -59,7 +59,7 @@ func createNewUser(app *core.GouthyApp, cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cvtUser := services.ConvertModelsToUserDTO(&newUser)
+	cvtUser := users.ConvertModelsToUserDTO(&newUser)
 
 	data, err := json.MarshalIndent(&cvtUser, "", "  ")
 	if err != nil {

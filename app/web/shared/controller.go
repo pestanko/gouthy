@@ -1,4 +1,4 @@
-package web_utils
+package shared
 
 import (
 	"github.com/gin-gonic/gin"
@@ -30,8 +30,8 @@ func (http *HTTPTools) NewControllerContext(gin *gin.Context) *ControllerContext
 
 
 type ControllerContext struct {
-	Gin *gin.Context
-	App *core.GouthyApp
+	Gin       *gin.Context
+	App       *core.GouthyApp
 	Responses StandardResponses
 }
 
