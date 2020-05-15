@@ -17,11 +17,11 @@ type Repository interface {
 
 type RepositoryDB struct {
 	db     *gorm.DB
-	common repositories.CommonRepository
+	common repositories.CommonRepositoryDB
 }
 
 func NewEntitiesRepositoryDB(db *gorm.DB) Repository {
-	return &RepositoryDB{db: db, common: repositories.NewCommonRepository(db, "Entity")}
+	return &RepositoryDB{db: db, common: repositories.NewCommonRepositoryDB(db, "Entity")}
 }
 
 func (service *RepositoryDB) Create(entity *Entity) error {

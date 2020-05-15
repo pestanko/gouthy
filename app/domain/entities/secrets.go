@@ -29,7 +29,7 @@ type SecretsRepository interface {
 
 type SecretsRepositoryDB struct {
 	db     *gorm.DB
-	common repositories.CommonRepository
+	common repositories.CommonRepositoryDB
 }
 
 func (repo *SecretsRepositoryDB) FindSecretsForEntity(id uuid.UUID) ([]Secret, error) {
@@ -37,5 +37,5 @@ func (repo *SecretsRepositoryDB) FindSecretsForEntity(id uuid.UUID) ([]Secret, e
 }
 
 func NewSecretsRepositoryDB(db *gorm.DB) SecretsRepository {
-	return &SecretsRepositoryDB{db: db, common: repositories.NewCommonRepository(db, "Secret")}
+	return &SecretsRepositoryDB{db: db, common: repositories.NewCommonRepositoryDB(db, "Secret")}
 }

@@ -17,7 +17,7 @@ type FacadeImpl struct {
 	Users    users.Repository
 	Machines machines.Repository
 	Entities entities.Repository
-	Jwk      jwtlib.JwkInventory
+	Jwk      jwtlib.JwkRepository
 }
 
 func (auth *FacadeImpl) LoginUsernamePassword(pwd PasswordLoginDTO) (Tokens, error) {
@@ -46,7 +46,7 @@ func (auth *FacadeImpl) createTokensForEntity(id uuid.UUID) (Tokens, error) {
 	return Tokens{}, nil
 }
 
-func NewAuthFacade(users users.Repository, machines machines.Repository, entities entities.Repository, inventory jwtlib.JwkInventory) Facade {
+func NewAuthFacade(users users.Repository, machines machines.Repository, entities entities.Repository, inventory jwtlib.JwkRepository) Facade {
 	return &FacadeImpl{Users: users, Entities: entities, Jwk: inventory, Machines: machines}
 }
 

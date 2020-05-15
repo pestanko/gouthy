@@ -9,11 +9,11 @@ import (
 
 type Repository struct {
 	DB     *gorm.DB
-	common repositories.CommonRepository
+	common repositories.CommonRepositoryDB
 }
 
 func NewUsersRepositoryDB(db *gorm.DB) Repository {
-	return Repository{DB: db, common: repositories.NewCommonRepository(db, "User")}
+	return Repository{DB: db, common: repositories.NewCommonRepositoryDB(db, "User")}
 }
 
 func (r *Repository) Create(user *User) error {

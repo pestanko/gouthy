@@ -5,63 +5,63 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type CommonRepository struct {
+type CommonRepositoryDB struct {
 	db   *gorm.DB
 	Name string
 }
 
-func NewCommonRepository(db *gorm.DB, name string) CommonRepository {
-	return CommonRepository{db: db, Name: name}
+func NewCommonRepositoryDB(db *gorm.DB, name string) CommonRepositoryDB {
+	return CommonRepositoryDB{db: db, Name: name}
 }
 
-func (service *CommonRepository) Create(instance interface{}) error {
-	result := service.db.Create(instance)
+func (repo *CommonRepositoryDB) Create(instance interface{}) error {
+	result := repo.db.Create(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
-			"service":  service.Name,
+			"repo":  repo.Name,
 			"action":   "create",
 			"instance": instance,
 		}).WithError(result.Error).Error("Create failed")
 		return result.Error
 	}
 	log.WithFields(log.Fields{
-		"service":  service.Name,
+		"repo":  repo.Name,
 		"action":   "create",
 		"instance": instance,
 	}).Info("Created instance")
 	return nil
 }
 
-func (service *CommonRepository) Update(instance interface{}) error {
-	result := service.db.Update(instance)
+func (repo *CommonRepositoryDB) Update(instance interface{}) error {
+	result := repo.db.Update(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
-			"service":  service.Name,
+			"repo":  repo.Name,
 			"action":   "update",
 			"instance": instance,
 		}).WithError(result.Error).Error("Update failed")
 		return result.Error
 	}
 	log.WithFields(log.Fields{
-		"service":  service.Name,
+		"repo":  repo.Name,
 		"action":   "update",
 		"instance": instance,
 	}).Info("Updated instance")
 	return nil
 }
 
-func (service *CommonRepository) Delete(instance interface{}) error {
-	result := service.db.Delete(instance)
+func (repo *CommonRepositoryDB) Delete(instance interface{}) error {
+	result := repo.db.Delete(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
-			"service":  service.Name,
+			"repo":  repo.Name,
 			"action":   "delete",
 			"instance": instance,
 		}).WithError(result.Error).Error("Delete failed")
 		return result.Error
 	}
 	log.WithFields(log.Fields{
-		"service":  service.Name,
+		"repo":  repo.Name,
 		"action":   "delete",
 		"instance": instance,
 	}).Info("Deleted instance")
