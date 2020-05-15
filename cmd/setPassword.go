@@ -47,11 +47,11 @@ func setPassword(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	userInstance, err := app.Services.Users.GetByUsername(user)
+	userInstance, err := app.Facades.Users.GetByUsername(user)
 	if err != nil {
 		return err
 	}
-	return app.Services.Users.UpdatePassword(userInstance.ID, &users.UpdatePasswordDTO{NewPassword: newPassword})
+	return app.Facades.Users.UpdatePassword(userInstance.ID, &users.UpdatePasswordDTO{NewPassword: newPassword})
 }
 
 func init() {

@@ -2,17 +2,18 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/auth"
+	"github.com/pestanko/gouthy/app/domain/entities"
+	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type AuthController struct {
-	App  *core.GouthyApp
-	http *shared.HTTPTools
-}
-
-func NewAuthController(app *core.GouthyApp) *AuthController {
-	return &AuthController{App: app, http: shared.NewHTTPTools(app)}
+	Entities entities.Facade
+	Users    users.Facade
+	Auth     auth.Facade
+	Http     *shared.HTTPTools
 }
 
 func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) shared.Controller {
@@ -30,20 +31,14 @@ func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) shared.Co
 	return ctrl
 }
 
-type PasswordLoginDTO struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (ctrl *AuthController) LoginPassword(context *gin.Context) {
-	ctx := ctrl.http.NewControllerContext(context)
-	var loginDTO PasswordLoginDTO
+	ctx := ctrl.Http.NewControllerContext(context)
+	var loginDTO users.PasswordLoginDTO
 	if err := ctx.Gin.BindJSON(&loginDTO); err != nil {
 		ctx.WriteErr(err)
 		return
 	}
-	username := loginDTO.Username
-	user, err := ctrl.App.Services.Users.GetByUsername(username)
+	user, err := ctrl.Users.GetByUsername(loginDTO.Username)
 	if err != nil {
 		ctx.WriteErr(err)
 		return
@@ -54,16 +49,35 @@ func (ctrl *AuthController) LoginPassword(context *gin.Context) {
 			"status":   "not_found",
 			"code":     401,
 			"message":  "User not found",
-			"username": username,
+			"username": loginDTO.Username,
 		})
 		return
 	}
 
-	if user.CheckPassword(loginDTO.Password) {
-
+	err = ctrl.Users.CheckPassword(loginDTO)
+	if err != nil {
+		ctx.Gin.JSON(401, gin.H{
+			"status":   "unauthorized",
+			"code":     401,
+			"message":  "User authentication failed",
+			"detail":   err.Error(),
+			"username": loginDTO.Username,
+		})
 	}
 
-	response := ctx.App.Services.Auth.LoginByID(user.ID)
+	response, err := ctrl.Auth.LoginByID(user.ID)
+	if err != nil {
+		ctx.Fail(api_errors.NewUnauthorizedError().WithError(err).WithDetail(api_errors.ErrorDetail{
+			"username": loginDTO.Username,
+		}))
+		ctx.Gin.JSON(401, gin.H{
+			"status":   "unauthorized",
+			"code":     401,
+			"message":  "Issuing the token failed",
+			"detail":   err.Error(),
+			"username": loginDTO.Username,
+		})
+	}
 	ctx.JSON(200, response)
 }
 

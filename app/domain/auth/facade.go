@@ -8,7 +8,12 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Facade struct {
+type Facade interface {
+	LoginByID(id uuid.UUID) (Tokens, error)
+}
+
+
+type FacadeImpl struct {
 	DB       *gorm.DB
 	Users    users.Facade
 	Entities entities.Facade
@@ -23,12 +28,12 @@ type Tokens struct {
 	TokenType    string `json:"token_type"`
 }
 
-func (s *Facade) LoginByID(id uuid.UUID) Tokens {
-	return Tokens{}
+func (s *FacadeImpl) LoginByID(id uuid.UUID) (Tokens, error) {
+	return Tokens{}, nil
 }
 
-func NewAuthService(db *gorm.DB, users users.Facade, entities entities.Facade, inventory jwtlib.JwkInventory) *Facade {
-	return &Facade{DB: db, Users: users, Entities: entities, Jwk: inventory}
+func NewAuthFacade(db *gorm.DB, users users.Facade, entities entities.Facade, inventory jwtlib.JwkInventory) Facade {
+	return &FacadeImpl{DB: db, Users: users, Entities: entities, Jwk: inventory}
 }
 
 

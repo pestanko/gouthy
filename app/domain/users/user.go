@@ -38,7 +38,7 @@ func (user *User) CheckPassword(password string) bool {
 
 
 // DTO
-type UserBaseDTO struct {
+type baseUserDTO struct {
 	Username string    `json:"username"`
 	Name     string    `json:"name"`
 	Email    string    `json:"email"`
@@ -46,7 +46,7 @@ type UserBaseDTO struct {
 }
 
 type NewUserDTO struct {
-	UserBaseDTO
+	baseUserDTO
 	Password string `json:"password"`
 }
 
@@ -62,11 +62,19 @@ type UpdatePasswordDTO struct {
 }
 
 type ListUserDTO struct {
-	UserBaseDTO
+	baseUserDTO
 }
 
 type UserDTO struct {
-	UserBaseDTO
+	baseUserDTO
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (user *User) ToDTO() *UserDTO {
+	return &UserDTO{
+		baseUserDTO: *convertModelToUserBase(user),
+		CreatedAt:   user.CreatedAt,
+		UpdatedAt:   user.UpdatedAt,
+	}
 }

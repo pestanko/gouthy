@@ -3,6 +3,7 @@ package shared
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/web/api_errors"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -39,16 +40,12 @@ func (ctx *ControllerContext) JSON(code int, obj interface{}) {
 	ctx.Gin.JSON(code, obj)
 }
 
-func (ctx *ControllerContext) Fail(err ApiError) {
-	ctx.JSON(err.Code, err)
-}
-
-func (ctx *ControllerContext) WriteError(err string, message string, code int) {
-	ctx.Fail(NewApiError(err, message, code))
+func (ctx *ControllerContext) Fail(err api_errors.ApiError) {
+	ctx.JSON(err.Code(), err)
 }
 
 func (ctx *ControllerContext) WriteErr(err error) {
-	ctx.Fail(NewApiError("server_error", err.Error(), 500))
+	ctx.Fail(api_errors.NewApiError().WithError(err))
 }
 
 func (ctx *ControllerContext) ParseUUID(id string) (uuid.UUID, error) {

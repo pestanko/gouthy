@@ -2,17 +2,13 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/entities"
 	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type EntitiesController struct {
-	App  *core.GouthyApp
-	http *shared.HTTPTools
-}
-
-func NewEntitiesController(app *core.GouthyApp) *EntitiesController {
-	return &EntitiesController{App: app, http: shared.NewHTTPTools(app)}
+	Entities entities.Facade
+	Http     *shared.HTTPTools
 }
 
 func (ctrl *EntitiesController) RegisterRoutes(r *gin.RouterGroup) shared.Controller {
@@ -23,7 +19,7 @@ func (ctrl *EntitiesController) RegisterRoutes(r *gin.RouterGroup) shared.Contro
 	r.PATCH("/:id", ctrl.Update)
 	r.DELETE("/:id", ctrl.Delete)
 
-	secrets := NewSecretsController(ctrl.App)
+	secrets := NewSecretsController(ctrl.Entities, ctrl.Http)
 	secrets.RegisterRoutes(r.Group("/:id/secrets"))
 	return ctrl
 }

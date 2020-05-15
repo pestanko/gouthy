@@ -54,7 +54,7 @@ func (s *FacadeImpl) Get(userId uuid.UUID) (*Entity, error) {
 	panic("implement me")
 }
 
-func NewEntitiesService(db *gorm.DB) Facade {
+func NewEntitiesFacade(db *gorm.DB) Facade {
 	return &FacadeImpl{
 		entities: NewEntitiesRepository(db),
 		secrets:  NewSecretsRepository(db),

@@ -5,19 +5,19 @@ func ConvertModelsToUserList(list []User) []ListUserDTO {
 
 	for _, user := range list {
 		item := ListUserDTO{
-			UserBaseDTO: *convertModelToUserBase(&user),
+			baseUserDTO: *convertModelToUserBase(&user),
 		}
 		listUsers = append(listUsers, item)
 	}
 	return listUsers
 }
 
-func convertModelToUserBase(user *User) *UserBaseDTO {
+func convertModelToUserBase(user *User) *baseUserDTO {
 	if user == nil {
 		return nil
 	}
 
-	return &UserBaseDTO{
+	return &baseUserDTO{
 		Username: user.Username,
 		Name:     user.Name,
 		Email:    user.Email,
@@ -25,13 +25,9 @@ func convertModelToUserBase(user *User) *UserBaseDTO {
 	}
 }
 
-func ConvertModelsToUserDTO(user *User) *UserDTO {
+func ConvertModelToUserDTO(user *User) *UserDTO {
 	if user == nil {
 		return nil
 	}
-	return &UserDTO{
-		UserBaseDTO: *convertModelToUserBase(user),
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
-	}
+	return user.ToDTO()
 }

@@ -11,13 +11,13 @@ import (
 )
 
 type GouthyApp struct {
-	Config   *AppConfig
-	DB       *gorm.DB
-	Services Services
+	Config  *AppConfig
+	DB      *gorm.DB
+	Facades Facades
 }
 
-type Services struct {
-	Auth     *auth.Facade
+type Facades struct {
+	Auth     auth.Facade
 	Users    users.Facade
 	Entities entities.Facade
 }
@@ -33,20 +33,20 @@ func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
 // GetApplication - gets an application instance
 func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
 	app := GouthyApp{Config: config, DB: db}
-	registerServices := RegisterServices(&app)
-	app.Services = registerServices
+	registerFacades := RegisterFacades(&app)
+	app.Facades = registerFacades
 	return app, nil
 }
 
-func RegisterServices(app *GouthyApp) Services {
+func RegisterFacades(app *GouthyApp) Facades {
 	jwkInventory := jwtlib.NewJwkInventory(app.Config.Jwk.Keys)
-	users := users.NewUsersFacade(app.DB)
-	entities := entities.NewEntitiesService(app.DB)
-	auth := auth.NewAuthService(app.DB, users, entities, jwkInventory)
+	usersFacade := users.NewUsersFacade(app.DB)
+	entitiesFacade := entities.NewEntitiesFacade(app.DB)
+	authFacade := auth.NewAuthFacade(app.DB, usersFacade, entitiesFacade, jwkInventory)
 
-	return Services{
-		Auth:     auth,
-		Users:    users,
-		Entities: entities,
+	return Facades{
+		Auth:     authFacade,
+		Users:    usersFacade,
+		Entities: entitiesFacade,
 	}
 }

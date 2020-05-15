@@ -17,11 +17,15 @@ type Secret struct {
 	ExpiresAt time.Time `gorm:"type:timestamp" json:"expires_at"`
 }
 
-type SecretsRepository struct {
-	DB     *gorm.DB
+type SecretsRepository interface {
+
+}
+
+type SecretsRepositoryDB struct {
+	db     *gorm.DB
 	common repositories.CommonRepository
 }
 
 func NewSecretsRepository(db *gorm.DB) SecretsRepository {
-	return SecretsRepository{DB: db, common: repositories.NewCommonService(db, "Secret")}
+	return &SecretsRepositoryDB{db: db, common: repositories.NewCommonService(db, "Secret")}
 }

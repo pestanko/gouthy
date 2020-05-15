@@ -6,16 +6,16 @@ import (
 )
 
 type CommonRepository struct {
-	DB   *gorm.DB
+	db   *gorm.DB
 	Name string
 }
 
 func NewCommonService(db *gorm.DB, name string) CommonRepository {
-	return CommonRepository{DB: db, Name: name}
+	return CommonRepository{db: db, Name: name}
 }
 
 func (service *CommonRepository) Create(instance interface{}) error {
-	result := service.DB.Create(instance)
+	result := service.db.Create(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
 			"service":  service.Name,
@@ -33,7 +33,7 @@ func (service *CommonRepository) Create(instance interface{}) error {
 }
 
 func (service *CommonRepository) Update(instance interface{}) error {
-	result := service.DB.Update(instance)
+	result := service.db.Update(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
 			"service":  service.Name,
@@ -51,7 +51,7 @@ func (service *CommonRepository) Update(instance interface{}) error {
 }
 
 func (service *CommonRepository) Delete(instance interface{}) error {
-	result := service.DB.Delete(instance)
+	result := service.db.Delete(instance)
 	if result.Error != nil {
 		log.WithFields(log.Fields{
 			"service":  service.Name,

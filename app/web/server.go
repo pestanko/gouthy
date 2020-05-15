@@ -3,19 +3,22 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type WebServer struct {
-	Router *gin.Engine
-	App    *core.GouthyApp
+	Router   *gin.Engine
+	App      *core.GouthyApp
+	httpTool *shared.HTTPTools
 }
 
 func CreateWebServer(application *core.GouthyApp) WebServer {
 	router := gin.Default()
 
 	return WebServer{
-		Router: router,
-		App:    application,
+		Router:   router,
+		App:      application,
+		httpTool: shared.NewHTTPTools(application),
 	}
 }
 
@@ -35,11 +38,10 @@ func (s *WebServer) Run() error {
 func (s *WebServer) RegisterRoutes() error {
 	apiRoute := s.Router.Group("/api")
 	v1Route := apiRoute.Group("/v1")
-	RegisterApiControllers(s.App, v1Route)
 
+	NewRestApi(s).Register(v1Route)
 	wellKnownRoute := s.Router.Group("./.well-known")
 	RegisterWellKnownControllers(s.App, wellKnownRoute)
 
 	return nil
 }
-

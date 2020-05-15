@@ -7,38 +7,42 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-
-
-type Facade interface {
-	Create(newUser *NewUserDTO) (User, error)
-	Update(userId uuid.UUID, newUser *UpdateUserDTO) (User, error)
-	Delete(userId uuid.UUID) error
-	UpdatePassword(userId uuid.UUID, password *UpdatePasswordDTO) error
-	List() ([]ListUserDTO, error)
-	Get(userId uuid.UUID) (*User, error)
-	GetByUsername(userId string) (*User, error)
-	GetByAnyId(sid string) (*User, error)
+type PasswordLoginDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-type FacadeImpl struct {
+type Facade interface {
+	Create(newUser *NewUserDTO) (*UserDTO, error)
+	Update(userId uuid.UUID, newUser *UpdateUserDTO) (*UserDTO, error)
+	Delete(userId uuid.UUID) error
+	UpdatePassword(userId uuid.UUID, password *UpdatePasswordDTO) error
+	CheckPassword(pwdLogin PasswordLoginDTO) error
+	List() ([]ListUserDTO, error)
+	Get(userId uuid.UUID) (*UserDTO, error)
+	GetByUsername(userId string) (*UserDTO, error)
+	GetByAnyId(sid string) (*UserDTO, error)
+}
+
+type facadeImpl struct {
 	users    Repository
 	entities entities.Repository
 	secrets  entities.SecretsRepository
 }
 
 func NewUsersFacade(db *gorm.DB) Facade {
-	return &FacadeImpl{
+	return &facadeImpl{
 		users:    NewUsersRepository(db),
 		entities: entities.NewEntitiesRepository(db),
 		secrets:  entities.NewSecretsRepository(db),
 	}
 }
 
-func (s *FacadeImpl) Create(newUser *NewUserDTO) (User, error) {
+func (s *facadeImpl) Create(newUser *NewUserDTO) (*UserDTO, error) {
 	var entity = entities.NewEntity()
 
 	if err := s.entities.Create(entity); err != nil {
-		return User{}, err
+		return nil, err
 	}
 
 	var user = User{
@@ -49,17 +53,17 @@ func (s *FacadeImpl) Create(newUser *NewUserDTO) (User, error) {
 	}
 
 	if err := user.SetPassword(newUser.Password); err != nil {
-		return user, err
+		return nil, err
 	}
 
 	if err := s.users.Create(&user); err != nil {
-		return user, err
+		return nil, err
 	}
 
-	return user, nil
+	return ConvertModelToUserDTO(&user), nil
 }
 
-func (s *FacadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (User, error) {
+func (s *facadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (*UserDTO, error) {
 	var user = User{
 		Username: update.Username,
 		Name:     update.Name,
@@ -68,13 +72,26 @@ func (s *FacadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (User, error) {
 	}
 
 	if err := s.users.Update(&user); err != nil {
-		return user, err
+		return nil, err
 	}
 
-	return user, nil
+	return ConvertModelToUserDTO(&user), nil
 }
 
-func (s *FacadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) error {
+func (s *facadeImpl) CheckPassword(pwdLogin PasswordLoginDTO) error {
+	user, err := s.users.FindByUsername(pwdLogin.Username)
+	if err != nil {
+		return err
+	}
+
+	if user.CheckPassword(pwdLogin.Password) {
+		return fmt.Errorf("password does not match")
+	}
+
+	return nil
+}
+
+func (s *facadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) error {
 	var user, err = s.users.FindByID(id)
 	if err != nil {
 		return err
@@ -91,7 +108,7 @@ func (s *FacadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) e
 	return s.users.Update(user)
 }
 
-func (s *FacadeImpl) Delete(userId uuid.UUID) error {
+func (s *facadeImpl) Delete(userId uuid.UUID) error {
 	var user, err = s.users.FindByID(userId)
 	if err != nil {
 		return err
@@ -100,7 +117,7 @@ func (s *FacadeImpl) Delete(userId uuid.UUID) error {
 	return s.users.Delete(user)
 }
 
-func (s *FacadeImpl) List() ([]ListUserDTO, error) {
+func (s *facadeImpl) List() ([]ListUserDTO, error) {
 	list, err := s.users.List()
 	if err != nil {
 		return []ListUserDTO{}, err
@@ -111,28 +128,29 @@ func (s *FacadeImpl) List() ([]ListUserDTO, error) {
 	return listUsers, err
 }
 
-func (s *FacadeImpl) Get(id uuid.UUID) (*User, error) {
+func (s *facadeImpl) Get(id uuid.UUID) (*UserDTO, error) {
 	var user, err = s.users.FindByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return ConvertModelToUserDTO(user), nil
 }
 
-func (s *FacadeImpl) GetByUsername(username string) (*User, error) {
+func (s *facadeImpl) GetByUsername(username string) (*UserDTO, error) {
 	var user, err = s.users.FindByUsername(username)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return ConvertModelToUserDTO(user), nil
 }
 
-func (s *FacadeImpl) GetByAnyId(sid string) (*User, error) {
+func (s *facadeImpl) GetByAnyId(sid string) (*UserDTO, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
 		return s.Get(uid)
 	}
+
 	return s.GetByUsername(sid)
 }

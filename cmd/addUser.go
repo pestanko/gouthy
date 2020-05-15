@@ -53,15 +53,13 @@ func init() {
 
 func createNewUser(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 
-	newUser, err := app.Services.Users.Create(&user)
+	newUser, err := app.Facades.Users.Create(&user)
 
 	if err != nil {
 		return err
 	}
 
-	cvtUser := users.ConvertModelsToUserDTO(&newUser)
-
-	data, err := json.MarshalIndent(&cvtUser, "", "  ")
+	data, err := json.MarshalIndent(&newUser, "", "  ")
 	if err != nil {
 		return err
 	}
