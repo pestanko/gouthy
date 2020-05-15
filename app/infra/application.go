@@ -1,4 +1,4 @@
-package core
+package infra
 
 import (
 	"fmt"
@@ -7,19 +7,28 @@ import (
 	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/auth/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/entities"
+	"github.com/pestanko/gouthy/app/domain/machines"
 	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 type GouthyApp struct {
+	db      *gorm.DB
 	Config  *AppConfig
-	DB      *gorm.DB
 	Facades Facades
+}
+
+type Repositories struct {
+	Users    users.Repository
+	Entities entities.Repository
+	Machines machines.Repository
+	Secrets  entities.SecretsRepository
 }
 
 type Facades struct {
 	Auth     auth.Facade
 	Users    users.Facade
 	Entities entities.Facade
+	Machines machines.Facade
 }
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
@@ -32,21 +41,33 @@ func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
 
 // GetApplication - gets an application instance
 func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
-	app := GouthyApp{Config: config, DB: db}
-	registerFacades := RegisterFacades(&app)
+	app := GouthyApp{Config: config, db: db}
+	registerFacades := NewFacades(&app)
 	app.Facades = registerFacades
 	return app, nil
 }
 
-func RegisterFacades(app *GouthyApp) Facades {
+func NewRepositories(app *GouthyApp) Repositories {
+	return Repositories{
+		Users:    users.NewUsersRepositoryDB(app.db),
+		Entities: entities.NewEntitiesRepositoryDB(app.db),
+		Machines: machines.NewMachinesRepositoryDB(app.db),
+		Secrets:  entities.NewSecretsRepositoryDB(app.db),
+	}
+}
+
+func NewFacades(app *GouthyApp) Facades {
+	repos := NewRepositories(app)
 	jwkInventory := jwtlib.NewJwkInventory(app.Config.Jwk.Keys)
-	usersFacade := users.NewUsersFacade(app.DB)
-	entitiesFacade := entities.NewEntitiesFacade(app.DB)
-	authFacade := auth.NewAuthFacade(app.DB, usersFacade, entitiesFacade, jwkInventory)
+	usersFacade := users.NewUsersFacade(repos.Users, repos.Entities)
+	entitiesFacade := entities.NewEntitiesFacade(repos.Entities, repos.Secrets)
+	machinesFacade := machines.NewMachinesFacade(repos.Machines)
+	authFacade := auth.NewAuthFacade(repos.Users, repos.Machines, repos.Entities, jwkInventory)
 
 	return Facades{
 		Auth:     authFacade,
 		Users:    usersFacade,
 		Entities: entitiesFacade,
+		Machines: machinesFacade,
 	}
 }

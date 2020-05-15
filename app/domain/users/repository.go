@@ -12,8 +12,8 @@ type Repository struct {
 	common repositories.CommonRepository
 }
 
-func NewUsersRepository(db *gorm.DB) Repository {
-	return Repository{DB: db, common: repositories.NewCommonService(db, "User")}
+func NewUsersRepositoryDB(db *gorm.DB) Repository {
+	return Repository{DB: db, common: repositories.NewCommonRepository(db, "User")}
 }
 
 func (r *Repository) Create(user *User) error {

@@ -20,8 +20,8 @@ type RepositoryDB struct {
 	common repositories.CommonRepository
 }
 
-func NewEntitiesRepository(db *gorm.DB) Repository {
-	return &RepositoryDB{db: db, common: repositories.NewCommonService(db, "Entity")}
+func NewEntitiesRepositoryDB(db *gorm.DB) Repository {
+	return &RepositoryDB{db: db, common: repositories.NewCommonRepository(db, "Entity")}
 }
 
 func (service *RepositoryDB) Create(entity *Entity) error {

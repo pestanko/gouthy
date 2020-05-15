@@ -10,7 +10,7 @@ type CommonRepository struct {
 	Name string
 }
 
-func NewCommonService(db *gorm.DB, name string) CommonRepository {
+func NewCommonRepository(db *gorm.DB, name string) CommonRepository {
 	return CommonRepository{db: db, Name: name}
 }
 

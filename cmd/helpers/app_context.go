@@ -2,20 +2,20 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-func BindAppContext(fn func(app *core.GouthyApp, cmd *cobra.Command, args []string) error,  cmd *cobra.Command, args []string) {
+func BindAppContext(fn func(app *infra.GouthyApp, cmd *cobra.Command, args []string) error,  cmd *cobra.Command, args []string) {
 	var err error
-	config, err := core.GetAppConfig()
+	config, err := infra.GetAppConfig()
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)
 	}
 
-	db, err := core.GetDBConnection(&config)
+	db, err := infra.GetDBConnection(&config)
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)
@@ -23,7 +23,7 @@ func BindAppContext(fn func(app *core.GouthyApp, cmd *cobra.Command, args []stri
 
 	defer db.Close()
 
-	app, err := core.GetApplication(&config, db)
+	app, err := infra.GetApplication(&config, db)
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)

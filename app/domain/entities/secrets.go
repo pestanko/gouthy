@@ -8,17 +8,23 @@ import (
 )
 
 type Secret struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;" json:"id"`
-	EntityId  uuid.UUID `gorm:"type:uuid" json:"entity_id"`
-	Name      string    `gorm:"varchar" json:"name"`
-	Value     string    `gorm:"varchar" json:"-"`
-	CreatedAt time.Time `gorm:"type:timestamp" json:"created_at"`
-	UpdatedAt time.Time `gorm:"type:timestamp" json:"updated_at"`
-	ExpiresAt time.Time `gorm:"type:timestamp" json:"expires_at"`
+	ID        uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
+	EntityId  uuid.UUID  `gorm:"type:uuid" json:"entity_id"`
+	Name      string     `gorm:"varchar" json:"name"`
+	Value     string     `gorm:"varchar" json:"-"`
+	CreatedAt time.Time  `gorm:"type:timestamp" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"type:timestamp" json:"updated_at"`
+	ExpiresAt *time.Time `gorm:"type:timestamp" json:"expires_at"`
+}
+
+func (s Secret) IsExpired() bool {
+	now := time.Now()
+
+	return s.ExpiresAt != nil && now.After(*s.ExpiresAt)
 }
 
 type SecretsRepository interface {
-
+	FindSecretsForEntity(id uuid.UUID) ([]Secret, error)
 }
 
 type SecretsRepositoryDB struct {
@@ -26,6 +32,10 @@ type SecretsRepositoryDB struct {
 	common repositories.CommonRepository
 }
 
-func NewSecretsRepository(db *gorm.DB) SecretsRepository {
-	return &SecretsRepositoryDB{db: db, common: repositories.NewCommonService(db, "Secret")}
+func (repo *SecretsRepositoryDB) FindSecretsForEntity(id uuid.UUID) ([]Secret, error) {
+	panic("implement me")
+}
+
+func NewSecretsRepositoryDB(db *gorm.DB) SecretsRepository {
+	return &SecretsRepositoryDB{db: db, common: repositories.NewCommonRepository(db, "Secret")}
 }

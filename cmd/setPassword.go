@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
@@ -38,7 +38,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func setPassword(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
+func setPassword(app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
 	var user = args[0]
 	fmt.Printf("Set a new password for %s: \n", user)
 

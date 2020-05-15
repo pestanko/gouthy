@@ -2,22 +2,15 @@ package users
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/domain/entities"
 	uuid "github.com/satori/go.uuid"
 )
-
-type PasswordLoginDTO struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 type Facade interface {
 	Create(newUser *NewUserDTO) (*UserDTO, error)
 	Update(userId uuid.UUID, newUser *UpdateUserDTO) (*UserDTO, error)
 	Delete(userId uuid.UUID) error
 	UpdatePassword(userId uuid.UUID, password *UpdatePasswordDTO) error
-	CheckPassword(pwdLogin PasswordLoginDTO) error
 	List() ([]ListUserDTO, error)
 	Get(userId uuid.UUID) (*UserDTO, error)
 	GetByUsername(userId string) (*UserDTO, error)
@@ -27,15 +20,10 @@ type Facade interface {
 type facadeImpl struct {
 	users    Repository
 	entities entities.Repository
-	secrets  entities.SecretsRepository
 }
 
-func NewUsersFacade(db *gorm.DB) Facade {
-	return &facadeImpl{
-		users:    NewUsersRepository(db),
-		entities: entities.NewEntitiesRepository(db),
-		secrets:  entities.NewSecretsRepository(db),
-	}
+func NewUsersFacade(users Repository, entitiesRepo entities.Repository) Facade {
+	return &facadeImpl{users: users, entities: entitiesRepo}
 }
 
 func (s *facadeImpl) Create(newUser *NewUserDTO) (*UserDTO, error) {
@@ -76,19 +64,6 @@ func (s *facadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (*UserDTO, erro
 	}
 
 	return ConvertModelToUserDTO(&user), nil
-}
-
-func (s *facadeImpl) CheckPassword(pwdLogin PasswordLoginDTO) error {
-	user, err := s.users.FindByUsername(pwdLogin.Username)
-	if err != nil {
-		return err
-	}
-
-	if user.CheckPassword(pwdLogin.Password) {
-		return fmt.Errorf("password does not match")
-	}
-
-	return nil
 }
 
 func (s *facadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) error {

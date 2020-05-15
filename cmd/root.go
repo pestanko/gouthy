@@ -17,7 +17,7 @@ package cmd
 
 import (
   "fmt"
-  "github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
   log "github.com/sirupsen/logrus"
   "github.com/spf13/cobra"
   "os"
@@ -64,8 +64,8 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-  core.SetupLogger("")
-  if err := core.LoadConfig(cfgFile); err != nil {
+  infra.SetupLogger("")
+  if err := infra.LoadConfig(cfgFile); err != nil {
     log.WithError(err).Error("Unable to load a config")
     os.Exit(1)
   }

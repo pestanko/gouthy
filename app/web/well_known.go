@@ -2,19 +2,19 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type WellKnownController struct {
-	App *core.GouthyApp
+	App *infra.GouthyApp
 }
 
-func CreateWellKnownController(app *core.GouthyApp) *WellKnownController {
+func CreateWellKnownController(app *infra.GouthyApp) *WellKnownController {
 	return &WellKnownController{App: app}
 }
 
-func RegisterWellKnownControllers(a *core.GouthyApp, r *gin.RouterGroup) []shared.Controller {
+func RegisterWellKnownControllers(a *infra.GouthyApp, r *gin.RouterGroup) []shared.Controller {
 	var controllers = []shared.Controller{
 		CreateWellKnownController(a),
 	}

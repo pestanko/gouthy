@@ -2,7 +2,7 @@ package shared
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	uuid "github.com/satori/go.uuid"
 )
@@ -16,10 +16,10 @@ type StandardResponses struct {
 }
 
 type HTTPTools struct {
-	App *core.GouthyApp
+	App *infra.GouthyApp
 }
 
-func NewHTTPTools(app *core.GouthyApp) *HTTPTools {
+func NewHTTPTools(app *infra.GouthyApp) *HTTPTools {
 	return &HTTPTools{
 		App: app,
 	}
@@ -32,7 +32,7 @@ func (http *HTTPTools) NewControllerContext(gin *gin.Context) *ControllerContext
 
 type ControllerContext struct {
 	Gin       *gin.Context
-	App       *core.GouthyApp
+	App       *infra.GouthyApp
 	Responses StandardResponses
 }
 

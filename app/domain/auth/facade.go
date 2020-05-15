@@ -1,23 +1,53 @@
 package auth
 
 import (
-	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/domain/auth/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/entities"
+	"github.com/pestanko/gouthy/app/domain/machines"
 	"github.com/pestanko/gouthy/app/domain/users"
 	uuid "github.com/satori/go.uuid"
 )
 
 type Facade interface {
-	LoginByID(id uuid.UUID) (Tokens, error)
+	LoginUsernamePassword(pwd PasswordLoginDTO) (Tokens, error)
+	LoginUsingSecret(secret SecretLoginDTO) (Tokens, error)
 }
 
-
 type FacadeImpl struct {
-	DB       *gorm.DB
-	Users    users.Facade
-	Entities entities.Facade
+	Users    users.Repository
+	Machines machines.Repository
+	Entities entities.Repository
 	Jwk      jwtlib.JwkInventory
+}
+
+func (auth *FacadeImpl) LoginUsernamePassword(pwd PasswordLoginDTO) (Tokens, error) {
+	user, err := auth.Users.FindByUsername(pwd.Username)
+	if err != nil {
+		return Tokens{}, err
+	}
+	flow := UcPasswordFlow{Users: auth.Users}
+
+	if flow.Check(user, pwd.Password) != nil {
+		return Tokens{}, err
+	}
+	return auth.createTokensForEntity(user.ID)
+}
+
+func (auth *FacadeImpl) LoginUsingSecret(secret SecretLoginDTO) (Tokens, error) {
+	// Get Entity
+
+	// check secret
+
+	// create tokens
+	return Tokens{}, nil
+}
+
+func (auth *FacadeImpl) createTokensForEntity(id uuid.UUID) (Tokens, error) {
+	return Tokens{}, nil
+}
+
+func NewAuthFacade(users users.Repository, machines machines.Repository, entities entities.Repository, inventory jwtlib.JwkInventory) Facade {
+	return &FacadeImpl{Users: users, Entities: entities, Jwk: inventory, Machines: machines}
 }
 
 type Tokens struct {
@@ -28,12 +58,13 @@ type Tokens struct {
 	TokenType    string `json:"token_type"`
 }
 
-func (s *FacadeImpl) LoginByID(id uuid.UUID) (Tokens, error) {
-	return Tokens{}, nil
+type PasswordLoginDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-func NewAuthFacade(db *gorm.DB, users users.Facade, entities entities.Facade, inventory jwtlib.JwkInventory) Facade {
-	return &FacadeImpl{DB: db, Users: users, Entities: entities, Jwk: inventory}
+type SecretLoginDTO struct {
+	Secret     string `json:"secret"`
+	Codename   string `json:"codename"`
+	EntityType string `json:"entity_type"`
 }
-
-

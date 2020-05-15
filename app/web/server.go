@@ -2,17 +2,17 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/web/shared"
 )
 
 type WebServer struct {
 	Router   *gin.Engine
-	App      *core.GouthyApp
+	App      *infra.GouthyApp
 	httpTool *shared.HTTPTools
 }
 
-func CreateWebServer(application *core.GouthyApp) WebServer {
+func CreateWebServer(application *infra.GouthyApp) WebServer {
 	router := gin.Default()
 
 	return WebServer{

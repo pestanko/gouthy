@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -54,9 +53,9 @@ func (s *FacadeImpl) Get(userId uuid.UUID) (*Entity, error) {
 	panic("implement me")
 }
 
-func NewEntitiesFacade(db *gorm.DB) Facade {
+func NewEntitiesFacade(entities Repository, secrets SecretsRepository) Facade {
 	return &FacadeImpl{
-		entities: NewEntitiesRepository(db),
-		secrets:  NewSecretsRepository(db),
+		entities: entities,
+		secrets:  secrets,
 	}
 }

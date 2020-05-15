@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/web"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func runServe(app *core.GouthyApp, cmd *cobra.Command, args []string) error {
+func runServe(app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
 	webServer := web.CreateWebServer(app)
 
 	if err := webServer.Run(); err != nil {
