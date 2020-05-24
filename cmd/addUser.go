@@ -18,8 +18,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
 )
@@ -52,8 +53,8 @@ func init() {
 }
 
 func createNewUser(app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-
-	newUser, err := app.Facades.Users.Create(&user)
+	ctx := shared.NewOperationContext()
+	newUser, err := app.Facades.Users.Create(ctx, &user)
 
 	if err != nil {
 		return err

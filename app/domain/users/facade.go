@@ -1,57 +1,64 @@
 package users
 
 import (
+	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/domain/entities"
+	"github.com/pestanko/gouthy/app/shared"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 )
 
+type ListParams struct {
+}
+
 type Facade interface {
-	Create(newUser *NewUserDTO) (*UserDTO, error)
-	Update(userId uuid.UUID, newUser *UpdateUserDTO) (*UserDTO, error)
-	Delete(userId uuid.UUID) error
-	UpdatePassword(userId uuid.UUID, password *UpdatePasswordDTO) error
-	List() ([]ListUserDTO, error)
-	Get(userId uuid.UUID) (*UserDTO, error)
-	GetByUsername(userId string) (*UserDTO, error)
-	GetByAnyId(sid string) (*UserDTO, error)
+	Create(ctx context.Context, newUser *NewUserDTO) (*UserDTO, error)
+	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateUserDTO) (*UserDTO, error)
+	Delete(ctx context.Context, userId uuid.UUID) error
+	UpdatePassword(ctx context.Context, userId uuid.UUID, password *UpdatePasswordDTO) error
+	List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error)
+	Get(ctx context.Context, userId uuid.UUID) (*UserDTO, error)
+	GetByUsername(ctx context.Context, userId string) (*UserDTO, error)
+	GetByAnyId(ctx context.Context, sid string) (*UserDTO, error)
 }
 
 type facadeImpl struct {
-	users    Repository
-	entities entities.Repository
+	users   Repository
+	secrets SecretsRepository
 }
 
-func NewUsersFacade(users Repository, entitiesRepo entities.Repository) Facade {
-	return &facadeImpl{users: users, entities: entitiesRepo}
+func NewUsersFacade(users Repository, secrets SecretsRepository) Facade {
+	return &facadeImpl{users: users, secrets: secrets}
 }
 
-func (s *facadeImpl) Create(newUser *NewUserDTO) (*UserDTO, error) {
-	var entity = entities.NewEntity()
-
-	if err := s.entities.Create(entity); err != nil {
-		return nil, err
-	}
+func (s *facadeImpl) Create(ctx context.Context, newUser *NewUserDTO) (*UserDTO, error) {
 
 	var user = User{
-		ID:       entity.ID,
 		Username: newUser.Username,
 		Name:     newUser.Name,
 		Email:    newUser.Email,
 	}
 
 	if err := user.SetPassword(newUser.Password); err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id":  user.ID,
+			"username": user.Username,
+		}).Error("Unable to hash a password")
 		return nil, err
 	}
 
-	if err := s.users.Create(&user); err != nil {
+	if err := s.users.Create(ctx, &user); err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id":  user.ID,
+			"username": user.Username,
+		}).Error("Unable to create a user")
 		return nil, err
 	}
 
 	return ConvertModelToUserDTO(&user), nil
 }
 
-func (s *facadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (*UserDTO, error) {
+func (s *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateUserDTO) (*UserDTO, error) {
 	var user = User{
 		Username: update.Username,
 		Name:     update.Name,
@@ -59,15 +66,19 @@ func (s *facadeImpl) Update(id uuid.UUID, update *UpdateUserDTO) (*UserDTO, erro
 		ID:       id,
 	}
 
-	if err := s.users.Update(&user); err != nil {
+	if err := s.users.Update(ctx, &user); err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id":  user.ID,
+			"username": user.Username,
+		}).Error("Unable to update a user")
 		return nil, err
 	}
 
 	return ConvertModelToUserDTO(&user), nil
 }
 
-func (s *facadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) error {
-	var user, err = s.users.FindByID(id)
+func (s *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password *UpdatePasswordDTO) error {
+	var user, err = s.users.FindByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -77,23 +88,31 @@ func (s *facadeImpl) UpdatePassword(id uuid.UUID, password *UpdatePasswordDTO) e
 	}
 
 	if err = user.SetPassword(password.NewPassword); err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id":  user.ID,
+			"username": user.Username,
+		}).Error("Unable to hash a password")
 		return err
 	}
 
-	return s.users.Update(user)
+	return s.users.Update(ctx, user)
 }
 
-func (s *facadeImpl) Delete(userId uuid.UUID) error {
-	var user, err = s.users.FindByID(userId)
+func (s *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
+	var user, err = s.users.FindByID(ctx, userId)
 	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id":  user.ID,
+			"username": user.Username,
+		}).Error("Unable to delete a user")
 		return err
 	}
 
-	return s.users.Delete(user)
+	return s.users.Delete(ctx, user)
 }
 
-func (s *facadeImpl) List() ([]ListUserDTO, error) {
-	list, err := s.users.List()
+func (s *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error) {
+	list, err := s.users.List(ctx)
 	if err != nil {
 		return []ListUserDTO{}, err
 	}
@@ -103,29 +122,35 @@ func (s *facadeImpl) List() ([]ListUserDTO, error) {
 	return listUsers, err
 }
 
-func (s *facadeImpl) Get(id uuid.UUID) (*UserDTO, error) {
-	var user, err = s.users.FindByID(id)
+func (s *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
+	var user, err = s.users.FindByID(ctx, id)
 	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"user_id": id,
+		}).Error("Unable to get a user")
 		return nil, err
 	}
 
 	return ConvertModelToUserDTO(user), nil
 }
 
-func (s *facadeImpl) GetByUsername(username string) (*UserDTO, error) {
-	var user, err = s.users.FindByUsername(username)
+func (s *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserDTO, error) {
+	var user, err = s.users.FindByUsername(ctx, username)
 	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"username": username,
+		}).Error("Unable to get a user")
 		return nil, err
 	}
 
 	return ConvertModelToUserDTO(user), nil
 }
 
-func (s *facadeImpl) GetByAnyId(sid string) (*UserDTO, error) {
+func (s *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*UserDTO, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
-		return s.Get(uid)
+		return s.Get(ctx, uid)
 	}
 
-	return s.GetByUsername(sid)
+	return s.GetByUsername(ctx, sid)
 }

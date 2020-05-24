@@ -17,8 +17,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/cmd/helpers"
 	"github.com/spf13/cobra"
 )
@@ -39,6 +40,8 @@ to quickly create a Cobra application.`,
 }
 
 func setPassword(app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+	ctx := shared.NewOperationContext()
+
 	var user = args[0]
 	fmt.Printf("Set a new password for %s: \n", user)
 
@@ -47,11 +50,11 @@ func setPassword(app *infra.GouthyApp, cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	userInstance, err := app.Facades.Users.GetByUsername(user)
+	userInstance, err := app.Facades.Users.GetByUsername(ctx, user)
 	if err != nil {
 		return err
 	}
-	return app.Facades.Users.UpdatePassword(userInstance.ID, &users.UpdatePasswordDTO{NewPassword: newPassword})
+	return app.Facades.Users.UpdatePassword(ctx, userInstance.ID, &users.UpdatePasswordDTO{NewPassword: newPassword})
 }
 
 func init() {

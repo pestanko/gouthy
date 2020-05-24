@@ -5,10 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/domain/auth/jwtlib"
-	"github.com/pestanko/gouthy/app/domain/entities"
-	"github.com/pestanko/gouthy/app/domain/machines"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/infra/jwtlib"
 )
 
 type GouthyApp struct {
@@ -18,17 +16,13 @@ type GouthyApp struct {
 }
 
 type Repositories struct {
-	Users    users.Repository
-	Entities entities.Repository
-	Machines machines.Repository
-	Secrets  entities.SecretsRepository
+	Users       users.Repository
+	UserSecrets users.SecretsRepository
 }
 
 type Facades struct {
-	Auth     auth.Facade
-	Users    users.Facade
-	Entities entities.Facade
-	Machines machines.Facade
+	Auth  auth.Facade
+	Users users.Facade
 }
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
@@ -49,25 +43,19 @@ func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
 
 func NewRepositories(app *GouthyApp) Repositories {
 	return Repositories{
-		Users:    users.NewUsersRepositoryDB(app.db),
-		Entities: entities.NewEntitiesRepositoryDB(app.db),
-		Machines: machines.NewMachinesRepositoryDB(app.db),
-		Secrets:  entities.NewSecretsRepositoryDB(app.db),
+		Users:       users.NewUsersRepositoryDB(app.db),
+		UserSecrets: users.NewSecretsRepositoryDB(app.db),
 	}
 }
 
 func NewFacades(app *GouthyApp) Facades {
 	repos := NewRepositories(app)
-	jwkInventory := jwtlib.NewJwkInventory(app.Config.Jwk.Keys)
-	usersFacade := users.NewUsersFacade(repos.Users, repos.Entities)
-	entitiesFacade := entities.NewEntitiesFacade(repos.Entities, repos.Secrets)
-	machinesFacade := machines.NewMachinesFacade(repos.Machines)
-	authFacade := auth.NewAuthFacade(repos.Users, repos.Machines, repos.Entities, jwkInventory)
+	jwkInventory := jwtlib.NewJwkRepository(app.Config.Jwk.Keys)
+	usersFacade := users.NewUsersFacade(repos.Users, repos.UserSecrets)
+	authFacade := auth.NewAuthFacade(repos.Users, jwkInventory)
 
 	return Facades{
-		Auth:     authFacade,
-		Users:    usersFacade,
-		Entities: entitiesFacade,
-		Machines: machinesFacade,
+		Auth:  authFacade,
+		Users: usersFacade,
 	}
 }

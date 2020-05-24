@@ -1,61 +1,64 @@
 package auth
 
 import (
-	"github.com/pestanko/gouthy/app/domain/auth/jwtlib"
-	"github.com/pestanko/gouthy/app/domain/entities"
-	"github.com/pestanko/gouthy/app/domain/machines"
+	"context"
 	"github.com/pestanko/gouthy/app/domain/users"
-	uuid "github.com/satori/go.uuid"
+	"github.com/pestanko/gouthy/app/infra/jwtlib"
+	"github.com/pestanko/gouthy/app/shared"
+	log "github.com/sirupsen/logrus"
 )
 
 type Facade interface {
-	LoginUsernamePassword(pwd PasswordLoginDTO) (Tokens, error)
-	LoginUsingSecret(secret SecretLoginDTO) (Tokens, error)
+	LoginUsernamePassword(ctx context.Context, loginState LoginState, pwd PasswordLoginDTO) (LoginState, error)
+	LoginTOTP(ctx context.Context, state LoginState, totp TotpDTO) (LoginState, error)
+	LoginUsingSecret(ctx context.Context, loginState LoginState, secret SecretLoginDTO) (LoginState, error)
 }
 
 type FacadeImpl struct {
-	Users    users.Repository
-	Machines machines.Repository
-	Entities entities.Repository
-	Jwk      jwtlib.JwkRepository
+	Users users.Repository
+	Jwk   jwtlib.JwkRepository
 }
 
-func (auth *FacadeImpl) LoginUsernamePassword(pwd PasswordLoginDTO) (Tokens, error) {
-	user, err := auth.Users.FindByUsername(pwd.Username)
+func (auth *FacadeImpl) LoginTOTP(ctx context.Context, state LoginState, totp TotpDTO) (LoginState, error) {
+	return nil, nil
+}
+
+func (auth *FacadeImpl) LoginUsernamePassword(ctx context.Context, loginState LoginState, pwd PasswordLoginDTO) (LoginState, error) {
+	user, err := auth.Users.FindByUsername(ctx, pwd.Username)
 	if err != nil {
-		return Tokens{}, err
+		shared.GetLogger(ctx).WithFields(log.Fields{
+			"username": pwd.Username,
+		}).WithError(err).Debug("Unable to find user - error happened")
+		return nil, err
 	}
-	flow := UcPasswordFlow{Users: auth.Users}
+	flow := UcPasswordFlow{Users: auth.Users, user: user, password: pwd.Password}
 
-	if flow.Check(user, pwd.Password) != nil {
-		return Tokens{}, err
+	err = flow.Check()
+	if err != nil {
+		loginState.AddStep(NewLoginStep("UserPassword", Failed))
+		shared.GetLogger(ctx).WithFields(log.Fields{
+			"username": pwd.Username,
+			"user_id": user.ID,
+		}).Debug("User password check failed - error happened")
+		return loginState, err
 	}
-	return auth.createTokensForEntity(user.ID)
+
+	loginState.AddStep(NewLoginStep("UserPassword", Success))
+
+	return loginState, nil
 }
 
-func (auth *FacadeImpl) LoginUsingSecret(secret SecretLoginDTO) (Tokens, error) {
+func (auth *FacadeImpl) LoginUsingSecret(ctx context.Context, loginState LoginState, secret SecretLoginDTO) (LoginState, error) {
 	// Get Entity
 
 	// check secret
 
 	// create tokens
-	return Tokens{}, nil
+	return nil, nil
 }
 
-func (auth *FacadeImpl) createTokensForEntity(id uuid.UUID) (Tokens, error) {
-	return Tokens{}, nil
-}
-
-func NewAuthFacade(users users.Repository, machines machines.Repository, entities entities.Repository, inventory jwtlib.JwkRepository) Facade {
-	return &FacadeImpl{Users: users, Entities: entities, Jwk: inventory, Machines: machines}
-}
-
-type Tokens struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	IdToken      string `json:"id_token"`
-	ExpiresIn    string `json:"expires_in"`
-	TokenType    string `json:"token_type"`
+func NewAuthFacade(users users.Repository, inventory jwtlib.JwkRepository) Facade {
+	return &FacadeImpl{Users: users, Jwk: inventory}
 }
 
 type PasswordLoginDTO struct {
@@ -67,4 +70,8 @@ type SecretLoginDTO struct {
 	Secret     string `json:"secret"`
 	Codename   string `json:"codename"`
 	EntityType string `json:"entity_type"`
+}
+
+type TotpDTO struct {
+	TotpCode string
 }

@@ -1,75 +1,34 @@
---- Entity can be ether USER or MACHINE
-CREATE TABLE IF NOT EXISTS Entities
-(
-    id           uuid               DEFAULT uuid_generate_v4(),
-    entity_type  VARCHAR   NOT NULL DEFAULT 'user',
-    entity_state VARCHAR   NOT NULL DEFAULT 'created',
+-- Your SQL goes here
 
-    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at   TIMESTAMP NULL,
-    PRIMARY KEY (id)
-);
+--- DB FUNCTIONS FUNCTIONS
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TRIGGER SetUpdated_Entities
-    BEFORE UPDATE
-    ON Entities
-    FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_updated();
+CREATE OR REPLACE FUNCTION trigger_set_updated()
+    RETURNS TRIGGER AS
+$$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE TABLE IF NOT EXISTS Secrets
-(
-    id         uuid      NOT NULL DEFAULT uuid_generate_v4(),
-    name       VARCHAR   NOT NULL,
-    value      VARCHAR   NOT NULL,
-    entity_id  uuid      NOT NULL REFERENCES Entities (id),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMP NULL,
-    PRIMARY KEY (id, entity_id)
-);
-
-CREATE TRIGGER SetUpdated_Secrets
-    BEFORE UPDATE
-    ON Secrets
-    FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_updated();
-
-CREATE TABLE IF NOT EXISTS LoginAudits
-(
-    id           uuid      NOT NULL DEFAULT uuid_generate_v4(),
-    login_method VARCHAR   NOT NULL,
-    entity_id    uuid      NOT NULL REFERENCES Entities (id),
-    created_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-    message      TEXT      NULL,
-    ip           VARCHAR   NULL,
-    ua           VARCHAR   NULL,
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS EntityStateAudit
-(
-    prev_state VARCHAR   NOT NULL,
-    curr_state VARCHAR   NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    entity_id  uuid      NOT NULL REFERENCES Entities (id),
-    updated_by uuid      NOT NULL REFERENCES Entities (id),
-    PRIMARY KEY (entity_id, created_at, prev_state, curr_state)
-);
-
---- SPECIFIC ENTITIES - USERS, MACHINES
-
+--- USERS RELATED
 CREATE TABLE IF NOT EXISTS Users
 (
-    id         uuid      NOT NULL, -- will be same as entity_id
+    id         uuid      NOT NULL DEFAULT uuid_generate_v4(), -- will be same as entity_id
     username   VARCHAR   NOT NULL UNIQUE,
     password   VARCHAR   NOT NULL,
     name       VARCHAR   NULL,
     email      VARCHAR   NULL,
+    user_type  VARCHAR   NULL     DEFAULT 'public',           -- PUBLIC, INTERNAL
+    state      VARCHAR   NOT NULL DEFAULT 'created',          -- CREATED, ACTIVE, LOCKED, DELETED
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP NULL,
     PRIMARY KEY (id)
 );
+
+CREATE UNIQUE INDEX Users_Username_Idx ON users (username);
 
 CREATE TRIGGER SetUpdated_Users
     BEFORE UPDATE
@@ -77,30 +36,64 @@ CREATE TRIGGER SetUpdated_Users
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
-CREATE TABLE IF NOT EXISTS Machines
+CREATE TABLE IF NOT EXISTS UserSecrets
 (
-    id        uuid    NOT NULL,
-    codename  VARCHAR NOT NULL UNIQUE,
-    name      VARCHAR NULL,
-    PRIMARY KEY (id)
+    id         uuid      NOT NULL DEFAULT uuid_generate_v4(),
+    name       VARCHAR   NOT NULL,
+    value      VARCHAR   NOT NULL,
+    user_id    uuid      NOT NULL REFERENCES Users (id),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMP NULL,
+    PRIMARY KEY (id, user_id)
 );
 
-CREATE TRIGGER SetUpdated_Machines
+CREATE TRIGGER SetUpdated_UserSecrets
     BEFORE UPDATE
-    ON Machines
+    ON UserSecrets
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_updated();
 
--- Helper tables
+-- Applications
 
-CREATE TABLE IF NOT EXISTS AutomaticSecurityCodes
+CREATE TABLE IF NOT EXISTS Applications
 (
-    id         uuid               DEFAULT uuid_generate_v4(),
-    code       VARCHAR   NOT NULL,
-    entity_id  uuid      NOT NULL REFERENCES Entities (id),
+    id         uuid      NOT NULL DEFAULT uuid_generate_v4(),
+    client_id  VARCHAR   NOT NULL UNIQUE,
+    codename   VARCHAR   NOT NULL UNIQUE,
+    name       VARCHAR   NOT NULL,
+    state      VARCHAR   NOT NULL DEFAULT 'created', -- CREATED, ACTIVE, LOCKED, DELETED
+
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    used_at    timestamp NULL,
-    primary key (entity_id, id)
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (id)
 );
 
+CREATE UNIQUE INDEX Applications_codename_Idx ON Applications (codename);
+CREATE UNIQUE INDEX Applications_client_id_Idx ON Applications (client_id);
 
+
+CREATE TRIGGER SetUpdated_Applications
+    BEFORE UPDATE
+    ON Applications
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_updated();
+
+CREATE TABLE IF NOT EXISTS ApplicationSecrets
+(
+    id             uuid      NOT NULL DEFAULT uuid_generate_v4(),
+    value          VARCHAR   NOT NULL,
+    application_id uuid      NOT NULL REFERENCES Applications (id),
+
+    created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+    expires_at     TIMESTAMP NULL,
+    PRIMARY KEY (id, application_id)
+);
+
+CREATE TRIGGER SetUpdated_ApplicationSecrets
+    BEFORE UPDATE
+    ON ApplicationSecrets
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_updated();

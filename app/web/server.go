@@ -3,13 +3,13 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/infra"
-	"github.com/pestanko/gouthy/app/web/shared"
+	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
 type WebServer struct {
 	Router   *gin.Engine
 	App      *infra.GouthyApp
-	httpTool *shared.HTTPTools
+	httpTool *web_utils.HTTPTools
 }
 
 func CreateWebServer(application *infra.GouthyApp) WebServer {
@@ -18,7 +18,7 @@ func CreateWebServer(application *infra.GouthyApp) WebServer {
 	return WebServer{
 		Router:   router,
 		App:      application,
-		httpTool: shared.NewHTTPTools(application),
+		httpTool: web_utils.NewHTTPTools(application),
 	}
 }
 

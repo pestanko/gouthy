@@ -7,11 +7,13 @@ import (
 
 type UcPasswordFlow struct {
 	Users users.Repository
+	user *users.User
+	password string
 }
 
-func (flow *UcPasswordFlow) Check(user *users.User, password string) error {
+func (flow *UcPasswordFlow) Check() error {
 	// check password
-	if user.CheckPassword(password) {
+	if ! flow.user.CheckPassword(flow.password) {
 		return fmt.Errorf("invalid password")
 	}
 	return nil
