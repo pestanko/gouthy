@@ -31,13 +31,13 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := infra.GetAppConfig()
 		if err != nil {
-			fmt.Printf("error: %v", err)
+			fmt.Printf("error: %v\n", err)
 			os.Exit(1)
 		}
 
 		content, err := config.Dump()
 		if err != nil {
-			fmt.Printf("error: %v", err)
+			fmt.Printf("error: %v\n", err)
 			os.Exit(1)
 		}
 

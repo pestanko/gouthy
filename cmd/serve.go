@@ -16,9 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/web"
-	"github.com/pestanko/gouthy/cmd/helpers"
+	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"github.com/spf13/cobra"
 )
 
@@ -33,13 +34,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		helpers.BindAppContext(runServe, cmd, args)
+		cmd_utils.BindAppContext(runServe, cmd, args)
 	},
 }
 
-func runServe(app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func runServe(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
 	webServer := web.CreateWebServer(app)
-
 	if err := webServer.Run(); err != nil {
 		return err
 	}

@@ -5,8 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/pestanko/gouthy/app/domain/auth"
+	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/infra/jwtlib"
 )
 
 type GouthyApp struct {
@@ -18,11 +18,13 @@ type GouthyApp struct {
 type Repositories struct {
 	Users       users.Repository
 	UserSecrets users.SecretsRepository
+	Jwk         jwtlib.JwkRepository
 }
 
 type Facades struct {
 	Auth  auth.Facade
 	Users users.Facade
+	Jwk   jwtlib.JwkFacade
 }
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
@@ -45,17 +47,20 @@ func NewRepositories(app *GouthyApp) Repositories {
 	return Repositories{
 		Users:       users.NewUsersRepositoryDB(app.db),
 		UserSecrets: users.NewSecretsRepositoryDB(app.db),
+		Jwk:         jwtlib.NewJwkRepository(app.Config.Jwk.Keys),
 	}
 }
 
 func NewFacades(app *GouthyApp) Facades {
 	repos := NewRepositories(app)
-	jwkInventory := jwtlib.NewJwkRepository(app.Config.Jwk.Keys)
+	jwkRepository := repos.Jwk
 	usersFacade := users.NewUsersFacade(repos.Users, repos.UserSecrets)
-	authFacade := auth.NewAuthFacade(repos.Users, jwkInventory)
+	authFacade := auth.NewAuthFacade(repos.Users, jwkRepository)
+	jwkFacade := jwtlib.NewJwkFacade(jwkRepository)
 
 	return Facades{
 		Auth:  authFacade,
 		Users: usersFacade,
+		Jwk:   jwkFacade,
 	}
 }

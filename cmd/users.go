@@ -16,15 +16,19 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
-
+	"github.com/jedib0t/go-pretty/table"
+	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"github.com/spf13/cobra"
 )
 
 // usersCmd represents the users command
 var usersCmd = &cobra.Command{
 	Use:   "users",
-	Short: "A brief description of your command",
+	Short: "Manage users or list all users if no additional action provided",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -32,8 +36,28 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("users called")
+		cmd_utils.BindAppContext(listAllUsers, cmd, args)
 	},
+}
+
+func listAllUsers(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+	usersList, err := app.Facades.Users.List(ctx, users.ListParams{})
+	if err != nil {
+		return err
+	}
+	// https://github.com/jedib0t/go-pretty/blob/master/cmd/demo-table/demo.go
+	tw := table.NewWriter()
+	tw.SetTitle("Gouthy Users")
+	tw.SetIndexColumn(1)
+	tw.AppendHeader(table.Row{"#", "ID", "Username", "Email", "Name"})
+
+	for i, user := range usersList {
+		tw.AppendRow(table.Row{i, user.ID, user.Username, user.Email, user.Name})
+	}
+
+	fmt.Println(tw.Render())
+
+	return nil
 }
 
 func init() {

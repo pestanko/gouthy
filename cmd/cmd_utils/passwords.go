@@ -1,4 +1,4 @@
-package helpers
+package cmd_utils
 
 import (
 	"fmt"

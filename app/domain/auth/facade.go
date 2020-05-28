@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
+	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/infra/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
 	log "github.com/sirupsen/logrus"
 )

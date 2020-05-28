@@ -16,3 +16,6 @@
 
 .idea/
 .code/
+
+data/jwks/
+!data/jwks/.gitkeep
