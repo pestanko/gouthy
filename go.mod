@@ -3,6 +3,7 @@ module github.com/pestanko/gouthy
 go 1.13
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-openapi/strfmt v0.19.5 // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
