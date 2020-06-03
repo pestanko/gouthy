@@ -19,16 +19,18 @@ type Claims struct {
 	Issuer     string `json:"iss,omitempty"`
 	Subject    string `json:"sub,omitempty"`
 	Additional map[string]interface{}
+	Scopes     []string `json:"scope,omitempty"`
 }
 
 func (claims *Claims) Serialize() jwt.MapClaims {
 	mapClaims := jwt.MapClaims{
-		"aud": claims.Audience,
-		"exp": claims.ExpiresAt,
-		"jti": claims.Id,
-		"iss": claims.Issuer,
-		"iat": claims.IssuedAt,
-		"sub": claims.Subject,
+		"aud":   claims.Audience,
+		"exp":   claims.ExpiresAt,
+		"jti":   claims.Id,
+		"iss":   claims.Issuer,
+		"iat":   claims.IssuedAt,
+		"sub":   claims.Subject,
+		"scope": claims.Scopes,
 	}
 
 	for key, value := range claims.Additional {
@@ -48,9 +50,10 @@ type ClaimParams struct {
 
 const PasswordLogin = "pwd-login"
 
-func MakeClaims(ctx context.Context, params ClaimParams) Claims {
+func makeClaims(ctx context.Context, params ClaimParams) Claims {
 	iat := time.Now().Unix()
-	id := uuid.NewV4().String()
+	id := params.TokenType + "." + uuid.NewV4().String()
+
 	shared.GetLogger(ctx).WithFields(log.Fields{
 		"id":  id,
 		"iat": iat,
@@ -68,6 +71,7 @@ func MakeClaims(ctx context.Context, params ClaimParams) Claims {
 		Id:         id,
 		Issuer:     params.Issuer,
 		Subject:    params.User.ID.String(),
+		Scopes:     params.Scopes,
 		Additional: make(map[string]interface{}),
 	}
 }

@@ -177,7 +177,7 @@ func (j *JwtFacadeImpl) signToken(ctx context.Context, jwt Jwt) (*SignedJwt, err
 }
 
 func (j *JwtFacadeImpl) makeClaims(ctx context.Context, params TokenCreateParams, expTime int64, tokenType string) (Claims, error) {
-	claims := MakeClaims(ctx, ClaimParams{
+	claims := makeClaims(ctx, ClaimParams{
 		User:          params.User,
 		Application:   params.App,
 		Scopes:        params.Scopes,

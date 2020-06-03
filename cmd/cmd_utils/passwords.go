@@ -30,7 +30,7 @@ func RequestPasswordWithRepeat() (string, error) {
 
 func RequestPassword() (string, error) {
 	var err error
-	fmt.Printf("New password: ")
+	fmt.Printf("Password: ")
 	newPass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err

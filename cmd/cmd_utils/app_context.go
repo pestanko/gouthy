@@ -31,7 +31,7 @@ func BindAppContext(fn func(ctx context.Context, app *infra.GouthyApp, cmd *cobr
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Printf("CLI error: %v", err)
+		fmt.Printf("CLI error: %v\n", err)
 		os.Exit(1)
 	}
 }
