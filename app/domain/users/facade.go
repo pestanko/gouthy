@@ -12,8 +12,8 @@ type ListParams struct {
 }
 
 type Facade interface {
-	Create(ctx context.Context, newUser *NewUserDTO) (*UserDTO, error)
-	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateUserDTO) (*UserDTO, error)
+	Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, error)
+	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*UserDTO, error)
 	Delete(ctx context.Context, userId uuid.UUID) error
 	UpdatePassword(ctx context.Context, userId uuid.UUID, password *UpdatePasswordDTO) error
 	List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error)
@@ -31,9 +31,9 @@ func NewUsersFacade(users Repository, secrets SecretsRepository) Facade {
 	return &facadeImpl{users: users, secrets: secrets}
 }
 
-func (s *facadeImpl) Create(ctx context.Context, newUser *NewUserDTO) (*UserDTO, error) {
+func (f *facadeImpl) Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, error) {
 
-	var user = User{
+	var user = &User{
 		Username: newUser.Username,
 		Name:     newUser.Name,
 		Email:    newUser.Email,
@@ -41,24 +41,27 @@ func (s *facadeImpl) Create(ctx context.Context, newUser *NewUserDTO) (*UserDTO,
 
 	if err := user.SetPassword(newUser.Password); err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"user_id":  user.ID,
 			"username": user.Username,
 		}).Error("Unable to hash a password")
 		return nil, err
 	}
 
-	if err := s.users.Create(ctx, &user); err != nil {
+	if err := f.users.Create(ctx, user); err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"user_id":  user.ID,
 			"username": user.Username,
 		}).Error("Unable to create a user")
 		return nil, err
 	}
 
-	return ConvertModelToUserDTO(&user), nil
+	shared.GetLogger(ctx).WithFields(log.Fields{
+		"user_id":  user.ID,
+		"username": user.Username,
+	}).Info("Creating a new user")
+
+	return ConvertModelToDTO(user), nil
 }
 
-func (s *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateUserDTO) (*UserDTO, error) {
+func (f *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateDTO) (*UserDTO, error) {
 	var user = User{
 		Username: update.Username,
 		Name:     update.Name,
@@ -66,7 +69,7 @@ func (s *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateUse
 		ID:       id,
 	}
 
-	if err := s.users.Update(ctx, &user); err != nil {
+	if err := f.users.Update(ctx, &user); err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"user_id":  user.ID,
 			"username": user.Username,
@@ -74,11 +77,11 @@ func (s *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateUse
 		return nil, err
 	}
 
-	return ConvertModelToUserDTO(&user), nil
+	return ConvertModelToDTO(&user), nil
 }
 
-func (s *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password *UpdatePasswordDTO) error {
-	var user, err = s.users.FindByID(ctx, id)
+func (f *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password *UpdatePasswordDTO) error {
+	var user, err = f.users.FindByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -95,11 +98,11 @@ func (s *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password 
 		return err
 	}
 
-	return s.users.Update(ctx, user)
+	return f.users.Update(ctx, user)
 }
 
-func (s *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
-	var user, err = s.users.FindByID(ctx, userId)
+func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
+	var user, err = f.users.FindByID(ctx, userId)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"user_id":  user.ID,
@@ -108,22 +111,20 @@ func (s *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 		return err
 	}
 
-	return s.users.Delete(ctx, user)
+	return f.users.Delete(ctx, user)
 }
 
-func (s *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error) {
-	list, err := s.users.List(ctx)
+func (f *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error) {
+	list, err := f.users.List(ctx)
 	if err != nil {
 		return []ListUserDTO{}, err
 	}
 
-	listUsers := ConvertModelsToUserList(list)
-
-	return listUsers, err
+	return ConvertModelsToList(list), err
 }
 
-func (s *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
-	var user, err = s.users.FindByID(ctx, id)
+func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
+	var user, err = f.users.FindByID(ctx, id)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"user_id": id,
@@ -131,11 +132,11 @@ func (s *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
 		return nil, err
 	}
 
-	return ConvertModelToUserDTO(user), nil
+	return ConvertModelToDTO(user), nil
 }
 
-func (s *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserDTO, error) {
-	var user, err = s.users.FindByUsername(ctx, username)
+func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserDTO, error) {
+	var user, err = f.users.FindByUsername(ctx, username)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"username": username,
@@ -143,14 +144,14 @@ func (s *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserD
 		return nil, err
 	}
 
-	return ConvertModelToUserDTO(user), nil
+	return ConvertModelToDTO(user), nil
 }
 
-func (s *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*UserDTO, error) {
+func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*UserDTO, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
-		return s.Get(ctx, uid)
+		return f.Get(ctx, uid)
 	}
 
-	return s.GetByUsername(ctx, sid)
+	return f.GetByUsername(ctx, sid)
 }

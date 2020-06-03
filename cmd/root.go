@@ -27,6 +27,8 @@ import (
 var cfgFile string
 
 
+const AdminConsoleApp = "admin_console"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
   Use:   "gouthy",

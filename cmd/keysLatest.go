@@ -18,17 +18,16 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/jedib0t/go-pretty/table"
-	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
+
 	"github.com/spf13/cobra"
 )
 
-// usersCmd represents the users command
-var usersCmd = &cobra.Command{
-	Use:   "users",
-	Short: "Manage users or list all users if no additional action provided",
+// keysLatestCmd represents the keysLatest command
+var keysLatestCmd = &cobra.Command{
+	Use:   "latest",
+	Short: "Get latest key",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -36,40 +35,31 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd_utils.BindAppContext(listAllUsers, cmd, args)
+		cmd_utils.BindAppContext(keysGetLatest, cmd, args)
 	},
 }
 
-func listAllUsers(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-	listEntities, err := app.Facades.Users.List(ctx, users.ListParams{})
+func keysGetLatest(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+	key, err := app.Facades.Jwk.GetLatest(ctx)
 	if err != nil {
 		return err
 	}
-	// https://github.com/jedib0t/go-pretty/blob/master/cmd/demo-table/demo.go
-	tw := table.NewWriter()
-	tw.SetTitle("Gouthy Users")
-	tw.SetIndexColumn(1)
-	tw.AppendHeader(table.Row{"#", "ID", "Username", "Email", "Name"})
 
-	for i, entity := range listEntities {
-		tw.AppendRow(table.Row{i, entity.ID, entity.Username, entity.Email, entity.Name})
-	}
-
-	fmt.Println(tw.Render())
+	fmt.Println(key.KeyId())
 
 	return nil
 }
 
 func init() {
-	rootCmd.AddCommand(usersCmd)
+	keysCmd.AddCommand(keysLatestCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// usersCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// keysLatestCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// usersCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// keysLatestCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

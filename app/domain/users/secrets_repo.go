@@ -71,10 +71,14 @@ func (r *secretsRepositoryDB) FindByID(ctx context.Context, userId uuid.UUID, id
 	return &secret, nil
 }
 
-func (r *secretsRepositoryDB) List(ctx context.Context, userId uuid.UUID) ([]Secret, error) {
-	var secrets []Secret
-	r.DB.Where("user_id = ?", userId).Find(&secrets)
-	return secrets, r.DB.Error
+func (r *secretsRepositoryDB) List(ctx context.Context, userId uuid.UUID) (result []Secret, err error) {
+	r.DB.Where("user_id = ?", userId).Find(&result)
+	if r.DB.Error != nil {
+		shared.GetLogger(ctx).WithFields(log.Fields{
+			"user_id": userId,
+		}).WithError(err).Error("List user secrets failed")
+	}
+	return result, r.DB.Error
 }
 
 func NewSecretsRepositoryDB(DB *gorm.DB) SecretsRepository {

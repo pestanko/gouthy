@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var user users.NewUserDTO
+var user users.CreateDTO
 var secret string
 
 // usersCreateCmd represents the usersCreate command
@@ -49,7 +49,7 @@ func init() {
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Name, "name", "n", "", "User Full name")
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Username, "username", "u", "", "User's username")
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Password, "password", "p", "", "User's password (not recommended)")
-	usersCreateCmd.PersistentFlags().StringVarP(&secret, "secret", "S", "", "User's secret")
+	usersCreateCmd.PersistentFlags().StringVarP(&secret, "appSecret", "S", "", "User's appSecret")
 }
 
 func createNewUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
@@ -64,6 +64,6 @@ func createNewUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command
 		return err
 	}
 
-	fmt.Printf("New user: %v \n", data)
+	fmt.Println(string(data))
 	return nil
 }

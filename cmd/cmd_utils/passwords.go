@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func RequestPassword() (string, error) {
+func RequestPasswordWithRepeat() (string, error) {
 	var err error
 	fmt.Printf("New password: ")
 	newPass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
@@ -22,6 +22,18 @@ func RequestPassword() (string, error) {
 
 	if string(newPass) != string(newPass2) {
 		return "", fmt.Errorf("passwords does mot match")
+	}
+
+	return string(newPass), err
+}
+
+
+func RequestPassword() (string, error) {
+	var err error
+	fmt.Printf("New password: ")
+	newPass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return "", err
 	}
 
 	return string(newPass), err

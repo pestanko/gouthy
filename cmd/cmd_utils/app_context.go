@@ -12,30 +12,26 @@ import (
 func BindAppContext(fn func(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error, cmd *cobra.Command, args []string) {
 	var err error
 	config, err := infra.GetAppConfig()
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		os.Exit(1)
-	}
+	checkError(err)
+
 
 	db, err := infra.GetDBConnection(&config)
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		os.Exit(1)
-	}
+	checkError(err)
 
 	defer db.Close()
 
 	app, err := infra.GetApplication(&config, db)
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		os.Exit(1)
-	}
+	checkError(err)
 
 	ctx := shared.NewOperationContext()
 	ctx = context.WithValue(ctx, "client_id", "admin_console")
 
-	if err = fn(ctx, &app, cmd, args); err != nil {
-		fmt.Printf("error: %v\n", err)
+	checkError(fn(ctx, &app, cmd, args))
+}
+
+func checkError(err error) {
+	if err != nil {
+		fmt.Printf("CLI error: %v", err)
 		os.Exit(1)
 	}
 }

@@ -26,7 +26,7 @@ func (jwk *JwkRsa) PublicKey() crypto.PublicKey {
 }
 
 func (jwk *JwkRsa) PrivateKey() crypto.PrivateKey {
-	panic("implement me")
+	return jwk.privateKey
 }
 
 func (jwk *JwkRsa) Algorithm() string {

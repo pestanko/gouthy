@@ -40,12 +40,12 @@ type baseUserDTO struct {
 	ID       uuid.UUID `json:"id"`
 }
 
-type NewUserDTO struct {
+type CreateDTO struct {
 	baseUserDTO
 	Password string `json:"password"`
 }
 
-type UpdateUserDTO struct {
+type UpdateDTO struct {
 	Username string `json:"username"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`

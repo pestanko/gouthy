@@ -16,7 +16,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"github.com/jedib0t/go-pretty/table"
+	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
 )
@@ -32,8 +37,28 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("apps called")
+		cmd_utils.BindAppContext(listAllApps, cmd, args)
 	},
+}
+
+func listAllApps(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+	listEntities, err := app.Facades.Apps.List(ctx, applications.ListParams{})
+	if err != nil {
+		return err
+	}
+	// https://github.com/jedib0t/go-pretty/blob/master/cmd/demo-table/demo.go
+	tw := table.NewWriter()
+	tw.SetTitle("Gouthy Applications")
+	tw.SetIndexColumn(1)
+	tw.AppendHeader(table.Row{"#", "ID", "Codename", "Name"})
+
+	for i, entity := range listEntities {
+		tw.AppendRow(table.Row{i, entity.ID, entity.Codename, entity.Name})
+	}
+
+	fmt.Println(tw.Render())
+
+	return nil
 }
 
 func init() {

@@ -16,6 +16,7 @@ type Repository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*User, error)
 	FindByUsername(ctx context.Context, username string) (*User, error)
 	List(ctx context.Context) ([]User, error)
+	FindByIdentifier(ctx context.Context, id string) (*User, error)
 }
 
 type repositoryDB struct {
@@ -56,11 +57,22 @@ func (r *repositoryDB) FindByID(ctx context.Context, id uuid.UUID) (*User, error
 	return &user, nil
 }
 
-func (r *repositoryDB) List(ctx context.Context) ([]User, error) {
-	var users []User
-	r.DB.Find(&users)
+func (r *repositoryDB) FindByIdentifier(ctx context.Context, id string) (*User, error) {
+	uuidId, err := uuid.FromString(id)
+	if err != nil {
+		return r.FindByUsername(ctx, id)
+	}
+	return r.FindByID(ctx, uuidId)
+}
 
-	return users, r.DB.Error
+func (r *repositoryDB) List(ctx context.Context) (result []User, err error) {
+	r.DB.Find(&result)
+	if r.DB.Error != nil {
+		shared.GetLogger(ctx).WithFields(log.Fields{
+		}).WithError(err).Error("List users failed")
+	}
+
+	return result, r.DB.Error
 }
 
 func (r *repositoryDB) FindByUsername(ctx context.Context, username string) (*User, error) {

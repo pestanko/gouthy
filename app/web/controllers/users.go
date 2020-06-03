@@ -28,7 +28,7 @@ func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) web_utils.Contro
 
 func (ctrl *UsersController) GetOne(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
-	sid := ctrl.Http.Param(ctx, "id")
+	sid := ctrl.Http.Param(ctx, "uid")
 
 	user, err := ctrl.findUser(ctx, sid)
 	if err != nil {
@@ -45,26 +45,30 @@ func (ctrl *UsersController) GetOne(context *gin.Context) {
 
 func (ctrl *UsersController) List(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
-	listUsers, err := ctrl.Users.List(ctx, users.ListParams{})
+	list, err := ctrl.Users.List(ctx, users.ListParams{})
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 200, listUsers)
+	ctrl.Http.JSON(ctx, 200, list)
 }
 
 func (ctrl *UsersController) Delete(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
 	sid := ctrl.Http.Param(ctx, "uid")
 
-	foundUser, err := ctrl.Users.GetByAnyId(ctx, sid)
+	found, err := ctrl.Users.GetByAnyId(ctx, sid)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	err = ctrl.Users.Delete(ctx, foundUser.ID)
+	err = ctrl.Users.Delete(ctx, found.ID)
+	if err != nil {
+		ctrl.Http.WriteErr(ctx, err)
+		return
+	}
 	ginCtx := ctrl.Http.Gin(ctx)
 	ginCtx.Status(204)
 }
@@ -72,7 +76,7 @@ func (ctrl *UsersController) Delete(context *gin.Context) {
 func (ctrl *UsersController) Create(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
 
-	var newUser users.NewUserDTO
+	var newUser users.CreateDTO
 	ginCtx := ctrl.Http.Gin(ctx)
 	if err := ginCtx.Bind(&newUser); err != nil {
 		ctrl.Http.WriteErr(ctx, err)
@@ -98,7 +102,7 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 		return
 	}
 
-	var updateUser users.UpdateUserDTO
+	var updateUser users.UpdateDTO
 	if err := c.Bind(&updateUser); err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
@@ -111,7 +115,6 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 	}
 
 	ctrl.Http.JSON(ctx, 201, user)
-	return
 }
 
 func (ctrl *UsersController) UpdatePassword(c *gin.Context) {
@@ -119,12 +122,12 @@ func (ctrl *UsersController) UpdatePassword(c *gin.Context) {
 }
 
 func (ctrl *UsersController) findUser(ctx context.Context, sid string) (*users.UserDTO, error) {
-	user, err := ctrl.Users.GetByAnyId(ctx, sid)
+	found, err := ctrl.Users.GetByAnyId(ctx, sid)
 	if err != nil {
 		return nil, err
 	}
-	if user == nil {
+	if found == nil {
 		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("User not found"))
 	}
-	return user, nil
+	return found, nil
 }

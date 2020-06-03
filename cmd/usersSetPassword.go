@@ -44,7 +44,7 @@ func setPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, 
 	var user = args[0]
 	fmt.Printf("Set a new password for %s: \n", user)
 
-	newPassword, err := cmd_utils.RequestPassword()
+	newPassword, err := cmd_utils.RequestPasswordWithRepeat()
 	if err != nil {
 		return err
 	}

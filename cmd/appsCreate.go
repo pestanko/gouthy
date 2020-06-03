@@ -16,15 +16,23 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
 )
 
+var appDTO applications.CreateDTO
+var appSecret string
+
 // appsCreateCmd represents the appsCreate command
 var appsCreateCmd = &cobra.Command{
-	Use:   "appsCreate",
-	Short: "A brief description of your command",
+	Use:   "create",
+	Short: "Create a new Application",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -32,12 +40,36 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("appsCreate called")
+		cmd_utils.BindAppContext(createNewApp, cmd, args)
 	},
+}
+
+func createNewApp(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+	newApp, err := app.Facades.Apps.Create(ctx, &appDTO)
+
+	if err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(&newApp, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(data))
+	return nil
 }
 
 func init() {
 	appsCmd.AddCommand(appsCreateCmd)
+
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Description, "desc", "D", "", "Application Description")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Name, "name", "n", "", "Application name")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Codename, "codename", "c", "", "Application's codename")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.ClientId, "client-id", "C", "", "Application's clientId")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Type, "type", "T", "", "Application's appSecret")
+
+	appsCreateCmd.PersistentFlags().StringVarP(&appSecret, "appSecret", "S", "", "Application's appSecret")
 
 	// Here you will define your flags and configuration settings.
 
