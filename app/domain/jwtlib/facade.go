@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pestanko/gouthy/app/domain/applications"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/shared"
 )
 
 const HOUR = 3600
@@ -46,6 +47,18 @@ type TokenCreateParams struct {
 	Scopes []string
 }
 
+type SignedTokensDTO struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	IdToken      string `json:"id_token"`
+	ExpiresIn    string `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+}
+
+func (d *SignedTokensDTO) Serialize() string {
+	return shared.ToJSONIndent(d)
+}
+
 type JwtFacade interface {
 	CreateAccessToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
 	CreateRefreshToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
@@ -53,6 +66,8 @@ type JwtFacade interface {
 	CreateSignedAccessToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
 	CreateSignedRefreshToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
 	CreateSignedIdToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
+
+	CreateSignedTokensResponse(ctx context.Context, params TokenCreateParams) (SignedTokensDTO, error)
 }
 
 type JwtFacadeImpl struct {
@@ -60,6 +75,31 @@ type JwtFacadeImpl struct {
 	users      users.Repository
 	apps       applications.Repository
 	jwtSigning JwtSigningService
+}
+
+func (j *JwtFacadeImpl) CreateSignedTokensResponse(ctx context.Context, params TokenCreateParams) (SignedTokensDTO, error) {
+	access, err := j.CreateSignedAccessToken(ctx, params)
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+
+	refresh, err := j.CreateSignedRefreshToken(ctx, params)
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+
+	id, err := j.CreateSignedRefreshToken(ctx, params)
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+
+	return SignedTokensDTO{
+		AccessToken:  access.Signature,
+		RefreshToken: refresh.Signature,
+		IdToken:      id.Signature,
+		ExpiresIn:    "3600",
+		TokenType:    "Bearer",
+	}, nil
 }
 
 func (j *JwtFacadeImpl) CreateSignedAccessToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error) {

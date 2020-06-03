@@ -89,12 +89,12 @@ func executeLoginPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.
 		App:    application,
 		Scopes: []string{"console_login"},
 	}
-	accessToken, err := app.Facades.Jwt.CreateSignedAccessToken(ctx, params)
+	accessToken, err := app.Facades.Jwt.CreateSignedTokensResponse(ctx, params)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(accessToken.Signature)
+	fmt.Println(accessToken.Serialize())
 
 	return nil
 }
