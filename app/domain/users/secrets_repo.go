@@ -10,30 +10,30 @@ import (
 	"time"
 )
 
-type Secret struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
-	UserID    uuid.UUID  `gorm:"type:varchar" json:"user_id"`
-	Value     string     `gorm:"type:varchar" json:"value"`
-	Name      string     `gorm:"type:varchar" json:"name"`
-	CreatedAt time.Time  `gorm:"type:timestamp" json:"created_at"`
-	UpdatedAt time.Time  `gorm:"type:timestamp" json:"updated_at"`
-	ExpiresAt *time.Time `gorm:"type:timestamp" json:"expires_at"`
+type SecretModel struct {
+	ID        uuid.UUID  `gorm:"type:uuid;primary_key;"`
+	UserID    uuid.UUID  `gorm:"type:varchar"`
+	Value     string     `gorm:"type:varchar"`
+	Name      string     `gorm:"type:varchar"`
+	CreatedAt time.Time  `gorm:"type:timestamp"`
+	UpdatedAt time.Time  `gorm:"type:timestamp"`
+	ExpiresAt *time.Time `gorm:"type:timestamp"`
 }
 
-func (Secret) TableName() string {
+func (SecretModel) TableName() string {
 	return "userSecrets"
 }
 
-func (s Secret) IsExpired() bool {
+func (s SecretModel) IsExpired() bool {
 	return s.ExpiresAt != nil && s.ExpiresAt.Before(time.Now())
 }
 
 type SecretsRepository interface {
-	Create(ctx context.Context, secret *Secret) error
-	Update(ctx context.Context, secret *Secret) error
-	Delete(ctx context.Context, secret *Secret) error
-	FindByID(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*Secret, error)
-	List(ctx context.Context, userId uuid.UUID) ([]Secret, error)
+	Create(ctx context.Context, secret *SecretModel) error
+	Update(ctx context.Context, secret *SecretModel) error
+	Delete(ctx context.Context, secret *SecretModel) error
+	FindByID(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*SecretModel, error)
+	List(ctx context.Context, userId uuid.UUID) ([]SecretModel, error)
 }
 
 type secretsRepositoryDB struct {
@@ -41,20 +41,20 @@ type secretsRepositoryDB struct {
 	common repositories.CommonRepositoryDB
 }
 
-func (r *secretsRepositoryDB) Create(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Create(ctx context.Context, secret *SecretModel) error {
 	return r.common.Create(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) Update(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Update(ctx context.Context, secret *SecretModel) error {
 	return r.common.Update(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) Delete(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Delete(ctx context.Context, secret *SecretModel) error {
 	return r.common.Delete(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) FindByID(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*Secret, error) {
-	var secret Secret
+func (r *secretsRepositoryDB) FindByID(ctx context.Context, userId uuid.UUID, id uuid.UUID) (*SecretModel, error) {
+	var secret SecretModel
 	result := r.DB.Where("id = ? AND user_id = ?", id, userId).Find(&secret)
 	if result.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
@@ -71,7 +71,7 @@ func (r *secretsRepositoryDB) FindByID(ctx context.Context, userId uuid.UUID, id
 	return &secret, nil
 }
 
-func (r *secretsRepositoryDB) List(ctx context.Context, userId uuid.UUID) (result []Secret, err error) {
+func (r *secretsRepositoryDB) List(ctx context.Context, userId uuid.UUID) (result []SecretModel, err error) {
 	r.DB.Where("user_id = ?", userId).Find(&result)
 	if r.DB.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{

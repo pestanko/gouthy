@@ -11,13 +11,13 @@ type ListParams struct {
 }
 
 type Facade interface {
-	Create(ctx context.Context, newApp *CreateDTO) (*ApplicationDTO, error)
-	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*ApplicationDTO, error)
+	Create(ctx context.Context, newApp *CreateDTO) (*Application, error)
+	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*Application, error)
 	Delete(ctx context.Context, userId uuid.UUID) error
 	List(ctx context.Context, listParams ListParams) ([]ListApplicationDTO, error)
-	Get(ctx context.Context, appId uuid.UUID) (*ApplicationDTO, error)
-	GetByCodename(ctx context.Context, appId string) (*ApplicationDTO, error)
-	GetByAnyId(ctx context.Context, sid string) (*ApplicationDTO, error)
+	Get(ctx context.Context, appId uuid.UUID) (*Application, error)
+	GetByCodename(ctx context.Context, appId string) (*Application, error)
+	GetByAnyId(ctx context.Context, sid string) (*Application, error)
 }
 
 type facadeImpl struct {
@@ -25,14 +25,14 @@ type facadeImpl struct {
 	secrets SecretsRepository
 }
 
-func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*ApplicationDTO, error) {
+func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*Application, error) {
 
 	clientId := newApp.ClientId
 	if clientId == "" {
 		clientId = uuid.NewV4().String()
 	}
 
-	var app = &Application{
+	var app = &ApplicationModel{
 		Codename:    newApp.Codename,
 		Name:        newApp.Name,
 		Description: newApp.Description,
@@ -57,8 +57,8 @@ func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*Applicatio
 	return ConvertModelToDTO(app), nil
 }
 
-func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *UpdateDTO) (*ApplicationDTO, error) {
-	var app = &Application{
+func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *UpdateDTO) (*Application, error) {
+	var app = &ApplicationModel{
 		ID:          appId,
 		Codename:    newApp.Codename,
 		Name:        newApp.Name,
@@ -104,7 +104,7 @@ func (f *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListApp
 	return ConvertModelsToList(list), err
 }
 
-func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*ApplicationDTO, error) {
+func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*Application, error) {
 	var app, err = f.apps.FindByID(ctx, appId)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -116,7 +116,7 @@ func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*ApplicationDTO,
 	return ConvertModelToDTO(app), nil
 }
 
-func (f *facadeImpl) GetByCodename(ctx context.Context, appId string) (*ApplicationDTO, error) {
+func (f *facadeImpl) GetByCodename(ctx context.Context, appId string) (*Application, error) {
 	var app, err = f.apps.FindByCodename(ctx, appId)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -128,7 +128,7 @@ func (f *facadeImpl) GetByCodename(ctx context.Context, appId string) (*Applicat
 	return ConvertModelToDTO(app), nil
 }
 
-func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*ApplicationDTO, error) {
+func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*Application, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
 		return f.Get(ctx, uid)

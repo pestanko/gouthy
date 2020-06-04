@@ -5,17 +5,21 @@ import (
 	"time"
 )
 
-type Application struct {
-	ID          uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
-	CreatedAt   time.Time  `gorm:"type:timestamp" json:"created_at"`
-	UpdatedAt   time.Time  `gorm:"type:timestamp" json:"updated_at"`
-	DeletedAt   *time.Time `gorm:"type:timestamp" json:"deleted_at"`
-	Codename    string     `gorm:"varchar" json:"codename"`
-	Name        string     `gorm:"varchar" json:"name"`
-	Type        string     `gorm:"varchar" json:"type"`
-	Description string     `gorm:"varchar" json:"description"`
-	ClientId    string     `gorm:"varchar" json:"client_id"`
-	State       string     `gorm:"varchar" json:"state"`
+type ApplicationModel struct {
+	ID          uuid.UUID  `gorm:"type:uuid;primary_key;"`
+	CreatedAt   time.Time  `gorm:"type:timestamp"`
+	UpdatedAt   time.Time  `gorm:"type:timestamp"`
+	DeletedAt   *time.Time `gorm:"type:timestamp"`
+	Codename    string     `gorm:"varchar"`
+	Name        string     `gorm:"varchar"`
+	Type        string     `gorm:"varchar"`
+	Description string     `gorm:"varchar"`
+	ClientId    string     `gorm:"varchar"`
+	State       string     `gorm:"varchar"`
+}
+
+func (ApplicationModel) TableName() string {
+	return "Applications"
 }
 
 // DTO
@@ -43,7 +47,7 @@ type UpdateDTO struct {
 	Description string `gorm:"varchar" json:"description"`
 }
 
-type ApplicationDTO struct {
+type Application struct {
 	baseApplicationDTO
 	Description string     `json:"description"`
 	ClientId    string     `json:"client_id"`

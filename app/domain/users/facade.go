@@ -12,14 +12,14 @@ type ListParams struct {
 }
 
 type Facade interface {
-	Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, error)
-	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*UserDTO, error)
+	Create(ctx context.Context, newUser *CreateDTO) (*User, error)
+	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*User, error)
 	Delete(ctx context.Context, userId uuid.UUID) error
 	UpdatePassword(ctx context.Context, userId uuid.UUID, password *UpdatePasswordDTO) error
 	List(ctx context.Context, listParams ListParams) ([]ListUserDTO, error)
-	Get(ctx context.Context, userId uuid.UUID) (*UserDTO, error)
-	GetByUsername(ctx context.Context, userId string) (*UserDTO, error)
-	GetByAnyId(ctx context.Context, sid string) (*UserDTO, error)
+	Get(ctx context.Context, userId uuid.UUID) (*User, error)
+	GetByUsername(ctx context.Context, userId string) (*User, error)
+	GetByAnyId(ctx context.Context, sid string) (*User, error)
 }
 
 type facadeImpl struct {
@@ -31,9 +31,9 @@ func NewUsersFacade(users Repository, secrets SecretsRepository) Facade {
 	return &facadeImpl{users: users, secrets: secrets}
 }
 
-func (f *facadeImpl) Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, error) {
+func (f *facadeImpl) Create(ctx context.Context, newUser *CreateDTO) (*User, error) {
 
-	var user = &User{
+	var user = &UserModel{
 		Username: newUser.Username,
 		Name:     newUser.Name,
 		Email:    newUser.Email,
@@ -61,8 +61,8 @@ func (f *facadeImpl) Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, 
 	return ConvertModelToDTO(user), nil
 }
 
-func (f *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateDTO) (*UserDTO, error) {
-	var user = User{
+func (f *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateDTO) (*User, error) {
+	var user = UserModel{
 		Username: update.Username,
 		Name:     update.Name,
 		Email:    update.Email,
@@ -123,7 +123,7 @@ func (f *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListUse
 	return ConvertModelsToList(list), err
 }
 
-func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
+func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 	var user, err = f.users.FindByID(ctx, id)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -135,7 +135,7 @@ func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
 	return ConvertModelToDTO(user), nil
 }
 
-func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserDTO, error) {
+func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*User, error) {
 	var user, err = f.users.FindByUsername(ctx, username)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -147,7 +147,7 @@ func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserD
 	return ConvertModelToDTO(user), nil
 }
 
-func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*UserDTO, error) {
+func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*User, error) {
 	var uid, err = uuid.FromString(sid)
 	if err == nil {
 		return f.Get(ctx, uid)

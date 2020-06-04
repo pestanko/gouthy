@@ -27,9 +27,8 @@ type Repositories struct {
 type Facades struct {
 	Auth  auth.Facade
 	Users users.Facade
-	Jwk   jwtlib.JwkFacade
-	Jwt   jwtlib.JwtFacade
 	Apps  applications.Facade
+	Keys  jwtlib.KeysFacade
 }
 
 func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
@@ -60,18 +59,11 @@ func NewRepositories(app *GouthyApp) Repositories {
 
 func NewFacades(app *GouthyApp) Facades {
 	repos := NewRepositories(app)
-	jwkRepository := repos.Jwk
-	usersFacade := users.NewUsersFacade(repos.Users, repos.UserSecrets)
-	appFacade := applications.NewApplicationsFacade(repos.Apps, repos.AppsSecrets)
-	authFacade := auth.NewAuthFacade(repos.Users, jwkRepository)
-	jwkFacade := jwtlib.NewJwkFacade(jwkRepository, repos.Users)
-	jwtFacade := jwtlib.NewJwtFacade(jwkRepository, repos.Users, repos.Apps)
 
 	return Facades{
-		Auth:  authFacade,
-		Users: usersFacade,
-		Apps:  appFacade,
-		Jwk:   jwkFacade,
-		Jwt:   jwtFacade,
+		Auth:  auth.NewAuthFacade(repos.Users, repos.Apps, repos.Jwk),
+		Users: users.NewUsersFacade(repos.Users, repos.UserSecrets),
+		Apps:  applications.NewApplicationsFacade(repos.Apps, repos.AppsSecrets),
+		Keys:  jwtlib.NewKeysFacade(repos.Users, repos.Jwk),
 	}
 }

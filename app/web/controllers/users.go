@@ -121,13 +121,13 @@ func (ctrl *UsersController) UpdatePassword(c *gin.Context) {
 
 }
 
-func (ctrl *UsersController) findUser(ctx context.Context, sid string) (*users.UserDTO, error) {
+func (ctrl *UsersController) findUser(ctx context.Context, sid string) (*users.User, error) {
 	found, err := ctrl.Users.GetByAnyId(ctx, sid)
 	if err != nil {
 		return nil, err
 	}
 	if found == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("User not found"))
+		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("UserModel not found"))
 	}
 	return found, nil
 }

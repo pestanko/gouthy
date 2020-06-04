@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type User struct {
+type UserModel struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
 	CreatedAt time.Time  `gorm:"type:timestamp" json:"created_at"`
 	UpdatedAt time.Time  `gorm:"type:timestamp" json:"updated_at"`
@@ -18,7 +18,11 @@ type User struct {
 	Email     string     `gorm:"type:varchar" json:"email"`
 }
 
-func (user *User) SetPassword(password string) error {
+func (UserModel) TableName() string {
+	return "Users"
+}
+
+func (user *UserModel) SetPassword(password string) error {
 	hash, err := utils.HashString(password)
 	if err != nil {
 		return err
@@ -28,7 +32,7 @@ func (user *User) SetPassword(password string) error {
 	return nil
 }
 
-func (user *User) CheckPassword(password string) bool {
+func (user *UserModel) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
 }
 
@@ -60,14 +64,14 @@ type ListUserDTO struct {
 	baseUserDTO
 }
 
-type UserDTO struct {
+type User struct {
 	baseUserDTO
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (user *User) ToDTO() *UserDTO {
-	return &UserDTO{
+func (user *UserModel) ToEntity() *User {
+	return &User{
 		baseUserDTO: *convertModelToUserBase(user),
 		CreatedAt:   user.CreatedAt,
 		UpdatedAt:   user.UpdatedAt,

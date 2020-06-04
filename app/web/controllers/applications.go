@@ -116,13 +116,13 @@ func (ctrl *ApplicationsController) Delete(context *gin.Context) {
 	ginCtx.Status(204)
 }
 
-func (ctrl *ApplicationsController) findApp(ctx context.Context, sid string) (*applications.ApplicationDTO, error) {
+func (ctrl *ApplicationsController) findApp(ctx context.Context, sid string) (*applications.Application, error) {
 	found, err := ctrl.Apps.GetByAnyId(ctx, sid)
 	if err != nil {
 		return nil, err
 	}
 	if found == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("Application not found"))
+		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("ApplicationModel not found"))
 	}
 	return found, nil
 }

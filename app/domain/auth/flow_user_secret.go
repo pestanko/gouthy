@@ -15,7 +15,7 @@ type UcSecretFlow struct {
 }
 
 func (flow *UcSecretFlow) Check(codename, secret string) error {
-	// Get User
+	// Get UserModel
 	id, err := flow.getUserIdByCodename(codename)
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func (flow *UcSecretFlow) Check(codename, secret string) error {
 	return nil
 }
 
-func (flow *UcSecretFlow) checkSecret(secrets []users.Secret, secret string) bool {
+func (flow *UcSecretFlow) checkSecret(secrets []users.SecretModel, secret string) bool {
 	for _, s := range secrets {
 		if utils.CompareHashAndOriginal(s.Value, secret) && !s.IsExpired() {
 			return true

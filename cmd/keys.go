@@ -41,7 +41,7 @@ to quickly create a Cobra application.`,
 }
 
 func listKeys(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-	list, err := app.Facades.Jwk.List(ctx)
+	list, err := app.Facades.Keys.ListJwks(ctx)
 	if err != nil {
 		return err
 	}

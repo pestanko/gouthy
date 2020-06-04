@@ -56,7 +56,7 @@ func (ctrl *AuthController) LoginPassword(context *gin.Context) {
 		ctrl.Http.JSON(ctx, 401, gin.H{
 			"status":   "not_found",
 			"code":     401,
-			"message":  "User not found",
+			"message":  "UserModel not found",
 			"username": loginDTO.Username,
 		})
 		return

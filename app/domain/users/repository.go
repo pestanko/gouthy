@@ -10,13 +10,13 @@ import (
 )
 
 type Repository interface {
-	Create(ctx context.Context, user *User) error
-	Update(ctx context.Context, user *User) error
-	Delete(ctx context.Context, user *User) error
-	FindByID(ctx context.Context, id uuid.UUID) (*User, error)
-	FindByUsername(ctx context.Context, username string) (*User, error)
-	List(ctx context.Context) ([]User, error)
-	FindByIdentifier(ctx context.Context, id string) (*User, error)
+	Create(ctx context.Context, user *UserModel) error
+	Update(ctx context.Context, user *UserModel) error
+	Delete(ctx context.Context, user *UserModel) error
+	FindByID(ctx context.Context, id uuid.UUID) (*UserModel, error)
+	FindByUsername(ctx context.Context, username string) (*UserModel, error)
+	List(ctx context.Context) ([]UserModel, error)
+	FindByIdentifier(ctx context.Context, id string) (*UserModel, error)
 }
 
 type repositoryDB struct {
@@ -25,23 +25,23 @@ type repositoryDB struct {
 }
 
 func NewUsersRepositoryDB(db *gorm.DB) Repository {
-	return &repositoryDB{DB: db, common: repositories.NewCommonRepositoryDB(db, "User")}
+	return &repositoryDB{DB: db, common: repositories.NewCommonRepositoryDB(db, "UserModel")}
 }
 
-func (r *repositoryDB) Create(ctx context.Context, user *User) error {
+func (r *repositoryDB) Create(ctx context.Context, user *UserModel) error {
 	return r.common.Create(ctx, user)
 }
 
-func (r *repositoryDB) Update(ctx context.Context, user *User) error {
+func (r *repositoryDB) Update(ctx context.Context, user *UserModel) error {
 	return r.common.Update(ctx, user)
 }
 
-func (r *repositoryDB) Delete(ctx context.Context, user *User) error {
+func (r *repositoryDB) Delete(ctx context.Context, user *UserModel) error {
 	return r.common.Delete(ctx, user)
 }
 
-func (r *repositoryDB) FindByID(ctx context.Context, id uuid.UUID) (*User, error) {
-	var user User
+func (r *repositoryDB) FindByID(ctx context.Context, id uuid.UUID) (*UserModel, error) {
+	var user UserModel
 	result := r.DB.Where("id = ?", id).Find(&user)
 	if result.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
@@ -57,7 +57,7 @@ func (r *repositoryDB) FindByID(ctx context.Context, id uuid.UUID) (*User, error
 	return &user, nil
 }
 
-func (r *repositoryDB) FindByIdentifier(ctx context.Context, id string) (*User, error) {
+func (r *repositoryDB) FindByIdentifier(ctx context.Context, id string) (*UserModel, error) {
 	uuidId, err := uuid.FromString(id)
 	if err != nil {
 		return r.FindByUsername(ctx, id)
@@ -65,7 +65,7 @@ func (r *repositoryDB) FindByIdentifier(ctx context.Context, id string) (*User, 
 	return r.FindByID(ctx, uuidId)
 }
 
-func (r *repositoryDB) List(ctx context.Context) (result []User, err error) {
+func (r *repositoryDB) List(ctx context.Context) (result []UserModel, err error) {
 	r.DB.Find(&result)
 	if r.DB.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
@@ -75,8 +75,8 @@ func (r *repositoryDB) List(ctx context.Context) (result []User, err error) {
 	return result, r.DB.Error
 }
 
-func (r *repositoryDB) FindByUsername(ctx context.Context, username string) (*User, error) {
-	var user User
+func (r *repositoryDB) FindByUsername(ctx context.Context, username string) (*UserModel, error) {
+	var user UserModel
 	result := r.DB.Where("username = ?", username).Find(&user)
 	if result.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{

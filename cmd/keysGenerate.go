@@ -39,7 +39,7 @@ to quickly create a Cobra application.`,
 }
 
 func generateNewKey(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-	err := app.Facades.Jwk.GenerateNew(ctx)
+	err := app.Facades.Keys.GenerateNewJwk(ctx)
 	return err
 }
 

@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 }
 
 func keysGetLatest(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-	key, err := app.Facades.Jwk.GetLatest(ctx)
+	key, err := app.Facades.Keys.GetLatest(ctx)
 	if err != nil {
 		return err
 	}

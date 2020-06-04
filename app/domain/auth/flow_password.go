@@ -7,7 +7,7 @@ import (
 
 type UcPasswordFlow struct {
 	Users users.Repository
-	user *users.User
+	user *users.UserModel
 	password string
 }
 

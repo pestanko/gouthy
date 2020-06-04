@@ -1,6 +1,6 @@
 package users
 
-func ConvertModelsToList(list []User) []ListUserDTO {
+func ConvertModelsToList(list []UserModel) []ListUserDTO {
 	var listUsers []ListUserDTO
 
 	for _, user := range list {
@@ -12,7 +12,7 @@ func ConvertModelsToList(list []User) []ListUserDTO {
 	return listUsers
 }
 
-func convertModelToUserBase(user *User) *baseUserDTO {
+func convertModelToUserBase(user *UserModel) *baseUserDTO {
 	if user == nil {
 		return nil
 	}
@@ -25,9 +25,9 @@ func convertModelToUserBase(user *User) *baseUserDTO {
 	}
 }
 
-func ConvertModelToDTO(user *User) *UserDTO {
+func ConvertModelToDTO(user *UserModel) *User {
 	if user == nil {
 		return nil
 	}
-	return user.ToDTO()
+	return user.ToEntity()
 }
