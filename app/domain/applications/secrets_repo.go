@@ -10,7 +10,13 @@ import (
 	"time"
 )
 
-type Secret struct {
+type SecretQuery struct {
+	repositories.PaginationQuery
+	Id            uuid.UUID
+	ApplicationId uuid.UUID
+}
+
+type SecretModel struct {
 	ID            uuid.UUID  `gorm:"type:uuid;primary_key;" json:"id"`
 	ApplicationId uuid.UUID  `gorm:"type:varchar" json:"application_id"`
 	Value         string     `gorm:"type:varchar" json:"value"`
@@ -19,12 +25,20 @@ type Secret struct {
 	ExpiresAt     *time.Time `gorm:"type:timestamp" json:"expires_at"`
 }
 
+func (s SecretModel) IsExpired() bool {
+	return s.ExpiresAt != nil && s.ExpiresAt.Before(time.Now())
+}
+
+func (SecretModel) TableName() string {
+	return "ApplicationSecrets"
+}
+
 type SecretsRepository interface {
-	Create(ctx context.Context, secret *Secret) error
-	Update(ctx context.Context, secret *Secret) error
-	Delete(ctx context.Context, secret *Secret) error
-	FindByID(ctx context.Context, appId uuid.UUID, id uuid.UUID) (*Secret, error)
-	List(ctx context.Context, appId uuid.UUID) ([]Secret, error)
+	Create(ctx context.Context, secret *SecretModel) error
+	Update(ctx context.Context, secret *SecretModel) error
+	Delete(ctx context.Context, secret *SecretModel) error
+	Query(ctx context.Context, query SecretQuery) ([]SecretModel, error)
+	QueryOne(ctx context.Context, query SecretQuery) (*SecretModel, error)
 }
 
 type secretsRepositoryDB struct {
@@ -32,46 +46,54 @@ type secretsRepositoryDB struct {
 	common repositories.CommonRepositoryDB
 }
 
-func (r *secretsRepositoryDB) Create(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Create(ctx context.Context, secret *SecretModel) error {
 	return r.common.Create(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) Update(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Update(ctx context.Context, secret *SecretModel) error {
 	return r.common.Update(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) Delete(ctx context.Context, secret *Secret) error {
+func (r *secretsRepositoryDB) Delete(ctx context.Context, secret *SecretModel) error {
 	return r.common.Delete(ctx, secret)
 }
 
-func (r *secretsRepositoryDB) FindByID(ctx context.Context, appId uuid.UUID, id uuid.UUID) (*Secret, error) {
-	var secret Secret
-	result := r.DB.Where("id = ? AND application_id = ?", id, appId).Find(&secret)
-	if result.Error != nil {
-		shared.GetLogger(ctx).WithFields(log.Fields{
-			"id":             id,
-			"application_id": appId,
-		}).WithError(result.Error).Error("Find Failed")
-
-		if gorm.IsRecordNotFoundError(result.Error) {
-			return nil, nil
-		}
-
-		return nil, result.Error
+func (r *secretsRepositoryDB) QueryOne(ctx context.Context, query SecretQuery) (*SecretModel, error) {
+	var result SecretModel
+	db, entry := r.internalQueryBuilder(ctx, query)
+	one, err := r.common.ProcessQueryOne(db, &result, entry)
+	if one == nil {
+		return nil, err
 	}
-	return &secret, nil
+	return one.(*SecretModel), err
 }
 
-func (r *secretsRepositoryDB) List(ctx context.Context, appId uuid.UUID) ([]Secret, error) {
-	var secrets []Secret
-	r.DB.Where("application_id = ?", appId).Find(&secrets)
-	return secrets, r.DB.Error
+func (r *secretsRepositoryDB) Query(ctx context.Context, query SecretQuery) (result []SecretModel, err error) {
+	db, entry := r.internalQueryBuilder(ctx, query)
+	return result, r.common.ProcessQuery(db, &result, entry)
+}
+
+func (r *secretsRepositoryDB) internalQueryBuilder(ctx context.Context, query SecretQuery) (*gorm.DB, *log.Entry) {
+	db := r.DB
+	logFields := log.Fields{
+		"record": "application_secret",
+	}
+
+	if query.Id != uuid.Nil {
+		db = db.Where("id = ?", query.Id)
+		logFields["id"] = query.Id
+	}
+
+	if query.ApplicationId != uuid.Nil {
+		db = db.Where("application_id = ?", query.ApplicationId)
+		logFields["application_id"] = query.ApplicationId
+	}
+
+	db = r.common.AddPagination(db, logFields, query.PaginationQuery)
+
+	return db, shared.GetLogger(ctx).WithFields(logFields)
 }
 
 func NewSecretsRepositoryDB(DB *gorm.DB) SecretsRepository {
 	return &secretsRepositoryDB{DB: DB, common: repositories.NewCommonRepositoryDB(DB, "ApplicationSecrets")}
-}
-
-func (Secret) TableName() string {
-	return "ApplicationSecrets"
 }

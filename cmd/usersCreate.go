@@ -45,11 +45,11 @@ to quickly create a Cobra application.`,
 
 func init() {
 	usersCmd.AddCommand(usersCreateCmd)
-	usersCreateCmd.PersistentFlags().StringVarP(&user.Email, "email", "e", "", "UserModel Email")
-	usersCreateCmd.PersistentFlags().StringVarP(&user.Name, "name", "n", "", "UserModel Full name")
-	usersCreateCmd.PersistentFlags().StringVarP(&user.Username, "username", "u", "", "UserModel's username")
-	usersCreateCmd.PersistentFlags().StringVarP(&user.Password, "password", "p", "", "UserModel's password (not recommended)")
-	usersCreateCmd.PersistentFlags().StringVarP(&secret, "appSecret", "S", "", "UserModel's appSecret")
+	usersCreateCmd.PersistentFlags().StringVarP(&user.Email, "email", "e", "", "User Email")
+	usersCreateCmd.PersistentFlags().StringVarP(&user.Name, "name", "n", "", "User Full name")
+	usersCreateCmd.PersistentFlags().StringVarP(&user.Username, "username", "u", "", "User's username")
+	usersCreateCmd.PersistentFlags().StringVarP(&user.Password, "password", "p", "", "User's password (not recommended)")
+	usersCreateCmd.PersistentFlags().StringVarP(&secret, "appSecret", "S", "", "User's appSecret")
 }
 
 func createNewUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {

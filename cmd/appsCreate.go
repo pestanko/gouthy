@@ -32,7 +32,7 @@ var appSecret string
 // appsCreateCmd represents the appsCreate command
 var appsCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a new ApplicationModel",
+	Short: "Create a new applicationModel",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -63,13 +63,13 @@ func createNewApp(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command,
 func init() {
 	appsCmd.AddCommand(appsCreateCmd)
 
-	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Description, "desc", "D", "", "ApplicationModel Description")
-	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Name, "name", "n", "", "ApplicationModel name")
-	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Codename, "codename", "c", "", "ApplicationModel's codename")
-	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.ClientId, "client-id", "C", "", "ApplicationModel's clientId")
-	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Type, "type", "T", "", "ApplicationModel's appSecret")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Description, "desc", "D", "", "applicationModel Description")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Name, "name", "n", "", "applicationModel name")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Codename, "codename", "c", "", "applicationModel's codename")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.ClientId, "client-id", "C", "", "applicationModel's clientId")
+	appsCreateCmd.PersistentFlags().StringVarP(&appDTO.Type, "type", "T", "", "applicationModel's appSecret")
 
-	appsCreateCmd.PersistentFlags().StringVarP(&appSecret, "appSecret", "S", "", "ApplicationModel's appSecret")
+	appsCreateCmd.PersistentFlags().StringVarP(&appSecret, "appSecret", "S", "", "applicationModel's appSecret")
 
 	// Here you will define your flags and configuration settings.
 

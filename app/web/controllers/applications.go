@@ -122,7 +122,7 @@ func (ctrl *ApplicationsController) findApp(ctx context.Context, sid string) (*a
 		return nil, err
 	}
 	if found == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("ApplicationModel not found"))
+		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("applicationModel not found"))
 	}
 	return found, nil
 }

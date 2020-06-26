@@ -72,7 +72,7 @@ func executeLoginPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.
 		Password: password,
 	})
 
-	if loginState == nil || loginState.IsFail() {
+	if loginState == nil || loginState.IsNotOk() {
 		return fmt.Errorf("fogin failed for user %s", username)
 	}
 

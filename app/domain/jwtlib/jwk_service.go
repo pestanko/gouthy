@@ -41,7 +41,7 @@ func NewJwkService(jwkRepo JwkRepository, usersRepo users.Repository) JwkService
 }
 
 type TokenCreateParams struct {
-	User   *users.User
+	User   *users.UserDTO
 	App    *applications.Application
 	Scopes []string
 }

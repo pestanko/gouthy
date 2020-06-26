@@ -3,11 +3,14 @@ package applications
 import (
 	"context"
 	"github.com/pestanko/gouthy/app/shared"
+	"github.com/pestanko/gouthy/app/shared/repositories"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 type ListParams struct {
+	Offset int
+	Limit  int
 }
 
 type Facade interface {
@@ -32,7 +35,7 @@ func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*Applicatio
 		clientId = uuid.NewV4().String()
 	}
 
-	var app = &ApplicationModel{
+	var app = &applicationModel{
 		Codename:    newApp.Codename,
 		Name:        newApp.Name,
 		Description: newApp.Description,
@@ -58,7 +61,7 @@ func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*Applicatio
 }
 
 func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *UpdateDTO) (*Application, error) {
-	var app = &ApplicationModel{
+	var app = &applicationModel{
 		ID:          appId,
 		Codename:    newApp.Codename,
 		Name:        newApp.Name,
@@ -82,12 +85,12 @@ func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *Update
 	return ConvertModelToDTO(app), nil
 }
 
-func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
-	var app, err = f.apps.FindByID(ctx, userId)
+func (f *facadeImpl) Delete(ctx context.Context, appId uuid.UUID) error {
+	var app, err = f.apps.QueryOne(ctx, applicationQuery{Id: appId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"app_id":   app.ID,
-			"codename": app.Codename,
+			"application_id": app.ID,
+			"codename":       app.Codename,
 		}).Error("Unable to delete an app")
 		return err
 	}
@@ -95,8 +98,10 @@ func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 	return f.apps.Delete(ctx, app)
 }
 
-func (f *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListApplicationDTO, error) {
-	list, err := f.apps.List(ctx)
+func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]ListApplicationDTO, error) {
+	list, err := f.apps.Query(ctx, applicationQuery{
+		PaginationQuery: repositories.NewPaginationQuery(params.Limit, params.Offset),
+	})
 	if err != nil {
 		return []ListApplicationDTO{}, err
 	}
@@ -105,10 +110,10 @@ func (f *facadeImpl) List(ctx context.Context, listParams ListParams) ([]ListApp
 }
 
 func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*Application, error) {
-	var app, err = f.apps.FindByID(ctx, appId)
+	var app, err = f.apps.QueryOne(ctx, applicationQuery{Id: appId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"app_id": appId,
+			"application_id": appId,
 		}).Error("Unable to get an app")
 		return nil, err
 	}
@@ -116,11 +121,11 @@ func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*Application, er
 	return ConvertModelToDTO(app), nil
 }
 
-func (f *facadeImpl) GetByCodename(ctx context.Context, appId string) (*Application, error) {
-	var app, err = f.apps.FindByCodename(ctx, appId)
+func (f *facadeImpl) GetByCodename(ctx context.Context, codename string) (*Application, error) {
+	var app, err = f.apps.QueryOne(ctx, applicationQuery{Codename: codename})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"codename": appId,
+			"codename": codename,
 		}).Error("Unable to get an app")
 		return nil, err
 	}

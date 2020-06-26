@@ -30,9 +30,10 @@ type Facade interface {
 }
 
 type facadeImpl struct {
-	Users      users.Repository
-	JwkService jwtlib.JwkService
-	JwtService jwtlib.JwtService
+	users           users.Repository
+	JwkService      jwtlib.JwkService
+	JwtService      jwtlib.JwtService
+	passwordService users.PasswordService
 }
 
 func (auth *facadeImpl) GenerateNewJwk(ctx context.Context) error {
@@ -83,27 +84,28 @@ func (auth *facadeImpl) LoginTOTP(ctx context.Context, state LoginState, totp To
 }
 
 func (auth *facadeImpl) LoginUsernamePassword(ctx context.Context, loginState LoginState, pwd PasswordLoginDTO) (LoginState, error) {
-	user, err := auth.Users.FindByUsername(ctx, pwd.Username)
+	user, err := auth.users.QueryOne(ctx, users.UserQuery{Username: pwd.Username})
+
 	if err != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
 			"username": pwd.Username,
 		}).WithError(err).Debug("Unable to find user - error happened")
 		return nil, err
 	}
-	flow := UcPasswordFlow{Users: auth.Users, user: user, password: pwd.Password}
 
-	err = flow.Check()
+	check := NewLoginCheckPassword(auth.passwordService)
+
+	entry := shared.GetLogger(ctx).WithFields(log.Fields{
+		"username": pwd.Username,
+		"user_id":  user.ID,
+	})
+	loginState, err = check.Check(ctx, loginState, CheckState{User: user, Password: pwd.Password})
 	if err != nil {
-		loginState.AddStep(NewLoginStep("UserPassword", Failed))
-		shared.GetLogger(ctx).WithFields(log.Fields{
-			"username": pwd.Username,
-			"user_id":  user.ID,
-		}).Debug("UserModel password check failed - error happened")
+		entry.WithError(err).Error("User password check failed")
 		return loginState, err
 	}
 
-	loginState.AddStep(NewLoginStep("UserPassword", Success))
-
+	entry.Debug("User password login successful")
 	return loginState, nil
 }
 
@@ -116,10 +118,15 @@ func (auth *facadeImpl) LoginUsingSecret(ctx context.Context, loginState LoginSt
 	return nil, nil
 }
 
-func NewAuthFacade(users users.Repository, apps applications.Repository, jwkRepo jwtlib.JwkRepository) Facade {
-	jwkService := jwtlib.NewJwkService(jwkRepo, users)
-	jwtService := jwtlib.NewJwtService(jwkRepo, users, apps)
-	return &facadeImpl{Users: users, JwkService: jwkService, JwtService: jwtService}
+func NewAuthFacade(usersRepo users.Repository, apps applications.Repository, jwkRepo jwtlib.JwkRepository) Facade {
+	jwkService := jwtlib.NewJwkService(jwkRepo, usersRepo)
+	jwtService := jwtlib.NewJwtService(jwkRepo, usersRepo, apps)
+	return &facadeImpl{
+		users:           usersRepo,
+		passwordService: users.NewPasswordService(usersRepo),
+		JwkService:      jwkService,
+		JwtService:      jwtService,
+	}
 }
 
 type PasswordLoginDTO struct {

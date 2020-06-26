@@ -38,6 +38,7 @@ type LoginStateStatus string
 const (
 	Success LoginStateStatus = "success"
 	Failed  LoginStateStatus = "failed"
+	Error   LoginStateStatus = "error"
 )
 
 type LoginState interface {
@@ -47,13 +48,20 @@ type LoginState interface {
 	AddStep(loginStep LoginStep) LoginState
 	IsSuccess() bool
 	IsFail() bool
+	IsError() bool
 	State() LoginStateStatus
+	IsNotOk() bool
+	IsOk() bool
 }
 
 type loginStateImpl struct {
 	loginSteps []LoginStep
 	userId     string
 	id         string
+}
+
+func (state *loginStateImpl) IsNotOk() bool {
+	return !state.IsOk()
 }
 
 func (state *loginStateImpl) ID() *string {
@@ -69,7 +77,11 @@ func (state *loginStateImpl) IsSuccess() bool {
 }
 
 func (state *loginStateImpl) IsFail() bool {
-	return !state.IsSuccess()
+	return state.State() == Failed
+}
+
+func (state *loginStateImpl) IsError() bool {
+	return state.State() == Error
 }
 
 func (state *loginStateImpl) State() LoginStateStatus {
@@ -90,10 +102,14 @@ func (state *loginStateImpl) AddStep(loginStep LoginStep) LoginState {
 	return state
 }
 
+func (state *loginStateImpl) IsOk() bool {
+	return state.IsSuccess()
+}
+
 func NewLoginState(userId uuid.UUID) LoginState {
 	return &loginStateImpl{
 		loginSteps: []LoginStep{},
-		userId: userId.String(),
-		id: uuid.NewV4().String(),
+		userId:     userId.String(),
+		id:         uuid.NewV4().String(),
 	}
 }
