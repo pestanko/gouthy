@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type UserQuery struct {
+type FindQuery struct {
 	repositories.PaginationQuery
 	Id       uuid.UUID
 	Username string
@@ -62,8 +62,8 @@ type Repository interface {
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, user *User) error
-	Query(ctx context.Context, query UserQuery) ([]User, error)
-	QueryOne(ctx context.Context, query UserQuery) (*User, error)
+	Query(ctx context.Context, query FindQuery) ([]User, error)
+	QueryOne(ctx context.Context, query FindQuery) (*User, error)
 }
 
 type repositoryDB struct {
@@ -83,7 +83,7 @@ func (r *repositoryDB) Delete(ctx context.Context, user *User) error {
 	return r.common.Delete(ctx, user)
 }
 
-func (r *repositoryDB) QueryOne(ctx context.Context, query UserQuery) (*User, error) {
+func (r *repositoryDB) QueryOne(ctx context.Context, query FindQuery) (*User, error) {
 	var result User
 	db, entry := r.internalQueryBuilder(ctx, query)
 	one, err := r.common.ProcessQueryOne(db, &result, entry)
@@ -94,12 +94,12 @@ func (r *repositoryDB) QueryOne(ctx context.Context, query UserQuery) (*User, er
 
 }
 
-func (r *repositoryDB) Query(ctx context.Context, query UserQuery) (result []User, err error) {
+func (r *repositoryDB) Query(ctx context.Context, query FindQuery) (result []User, err error) {
 	db, entry := r.internalQueryBuilder(ctx, query)
 	return result, r.common.ProcessQuery(db, &result, entry)
 }
 
-func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query UserQuery) (*gorm.DB, *log.Entry) {
+func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery) (*gorm.DB, *log.Entry) {
 	db := r.DB
 	logFields := log.Fields{
 		"model": "user",

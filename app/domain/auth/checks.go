@@ -2,13 +2,13 @@ package auth
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 type CheckState struct {
 	User        *users.User
-	Application *applications.Application
+	Application *apps.ApplicationDTO
 	Password    string
 	Secret      string
 }
@@ -19,7 +19,7 @@ type LoginCheck interface {
 }
 
 //
-// Login Check password
+// LoginPage Check password
 //
 type LoginCheckPassword struct {
 	passwordService users.PasswordService

@@ -49,7 +49,7 @@ func (repo *JwkRepositoryImpl) GetLatest(ctx context.Context) (Jwk, error) {
 	shared.GetLogger(ctx).WithFields(log.Fields{
 		"real_path": linkPath,
 		"name":      name,
-	}).Debug("Get latest JWK")
+	}).Debug("Find latest JWK")
 
 	return repo.Get(ctx, name)
 }

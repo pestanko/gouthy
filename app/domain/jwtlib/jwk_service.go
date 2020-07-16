@@ -2,7 +2,7 @@ package jwtlib
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
 )
 
@@ -42,7 +42,7 @@ func NewJwkService(jwkRepo JwkRepository, usersRepo users.Repository) JwkService
 
 type TokenCreateParams struct {
 	User   *users.UserDTO
-	App    *applications.Application
+	App    *apps.ApplicationDTO
 	Scopes []string
 }
 

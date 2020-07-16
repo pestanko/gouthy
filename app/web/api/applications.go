@@ -1,19 +1,18 @@
-package controllers
+package api
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-type ApplicationsController struct {
-	Apps applications.Facade
+type appController struct {
+	Apps apps.Facade
 	Http *web_utils.HTTPTools
 }
 
-func (ctrl *ApplicationsController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *appController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
 
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
@@ -25,9 +24,9 @@ func (ctrl *ApplicationsController) RegisterRoutes(r *gin.RouterGroup) web_utils
 	return ctrl
 }
 
-func (ctrl *ApplicationsController) List(context *gin.Context) {
+func (ctrl *appController) List(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
-	list, err := ctrl.Apps.List(ctx, applications.ListParams{})
+	list, err := ctrl.Apps.List(ctx, apps.ListParams{})
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
@@ -36,58 +35,68 @@ func (ctrl *ApplicationsController) List(context *gin.Context) {
 	ctrl.Http.JSON(ctx, 200, list)
 }
 
-func (ctrl *ApplicationsController) Create(context *gin.Context) {
+func (ctrl *appController) Create(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
 
-	var newApp applications.CreateDTO
+	var newApp apps.CreateDTO
 	ginCtx := ctrl.Http.Gin(ctx)
 	if err := ginCtx.Bind(&newApp); err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
-	user, err := ctrl.Apps.Create(ctx, &newApp)
+	app, err := ctrl.Apps.Create(ctx, &newApp)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 201, user)
+	ctrl.Http.JSON(ctx, 201, app)
 }
 
-func (ctrl *ApplicationsController) GetOne(c *gin.Context) {
+func (ctrl *appController) GetOne(c *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(c)
 	sid := ctrl.Http.Param(ctx, "aid")
 
-	user, err := ctrl.findApp(ctx, sid)
+	found, err := ctrl.Apps.GetByAnyId(ctx, sid)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	if user == nil {
+	if found == nil {
+		ctrl.Http.Fail(ctx, api_errors.NewAppNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 200, user)
+	ctrl.Http.JSON(ctx, 200, found)
 }
 
-func (ctrl *ApplicationsController) Update(c *gin.Context) {
+func (ctrl *appController) Update(c *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(c)
 	sid := ctrl.Http.Param(ctx, "aid")
 
-	foundUser, err := ctrl.Apps.GetByAnyId(ctx, sid)
+	found, err := ctrl.Apps.GetByAnyId(ctx, sid)
 
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	var updateApp applications.UpdateDTO
+	if found == nil {
+		ctrl.Http.Fail(ctx, api_errors.NewAppNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
+		return
+	}
+
+	var updateApp apps.UpdateDTO
 	if err := c.Bind(&updateApp); err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
-	user, err := ctrl.Apps.Update(ctx, foundUser.ID, &updateApp)
+	user, err := ctrl.Apps.Update(ctx, found.ID, &updateApp)
 
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
@@ -97,13 +106,20 @@ func (ctrl *ApplicationsController) Update(c *gin.Context) {
 	ctrl.Http.JSON(ctx, 201, user)
 }
 
-func (ctrl *ApplicationsController) Delete(context *gin.Context) {
+func (ctrl *appController) Delete(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
 	sid := ctrl.Http.Param(ctx, "aid")
 
 	found, err := ctrl.Apps.GetByAnyId(ctx, sid)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
+		return
+	}
+
+	if found == nil {
+		ctrl.Http.Fail(ctx, api_errors.NewAppNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
 		return
 	}
 
@@ -114,15 +130,4 @@ func (ctrl *ApplicationsController) Delete(context *gin.Context) {
 	}
 	ginCtx := ctrl.Http.Gin(ctx)
 	ginCtx.Status(204)
-}
-
-func (ctrl *ApplicationsController) findApp(ctx context.Context, sid string) (*applications.Application, error) {
-	found, err := ctrl.Apps.GetByAnyId(ctx, sid)
-	if err != nil {
-		return nil, err
-	}
-	if found == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("applicationModel not found"))
-	}
-	return found, nil
 }

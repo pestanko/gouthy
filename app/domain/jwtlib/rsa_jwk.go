@@ -156,7 +156,7 @@ func generateRsaPrivateKey(ctx context.Context, bitSize int) (*rsa.PrivateKey, e
 
 // encodeRsaPrivateKeyToPEM encodes Private Key from RSA to PEM format
 func encodeRsaPrivateKeyToPEM(ctx context.Context, privateKey crypto.PrivateKey) []byte {
-	// Get ASN.1 DER format
+	// Find ASN.1 DER format
 	keyBytes := x509.MarshalPKCS1PrivateKey(privateKey.(*rsa.PrivateKey))
 
 	// pem.Block

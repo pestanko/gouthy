@@ -1,4 +1,4 @@
-package controllers
+package api
 
 import (
 	"github.com/gin-gonic/gin"
@@ -53,12 +53,9 @@ func (ctrl *AuthController) LoginPassword(context *gin.Context) {
 	}
 
 	if user == nil {
-		ctrl.Http.JSON(ctx, 401, gin.H{
-			"status":   "not_found",
-			"code":     401,
-			"message":  "User not found",
-			"username": loginDTO.Username,
-		})
+		ctrl.Http.Fail(ctx, api_errors.NewUserNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": loginDTO.Username,
+		}))
 		return
 	}
 
@@ -88,6 +85,8 @@ func (ctrl *AuthController) Register(context *gin.Context) {
 }
 
 func (ctrl *AuthController) OAuth2AuthorizeEndpoint(context *gin.Context) {
+	ctx := ctrl.Http.NewControllerContext(context)
+	authorizationRequest := web_utils.OAuth2ParseAuthorizationRequest(context)
 
 }
 

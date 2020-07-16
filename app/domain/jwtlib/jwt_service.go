@@ -2,7 +2,7 @@ package jwtlib
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
 )
 
@@ -20,7 +20,7 @@ type JwtService interface {
 type jwtServiceImpl struct {
 	keys       JwkRepository
 	users      users.Repository
-	apps       applications.Repository
+	apps       apps.Repository
 	jwtSigning JwtSigningService
 }
 
@@ -110,7 +110,7 @@ func (j *jwtServiceImpl) makeClaims(ctx context.Context, params TokenCreateParam
 	return claims, nil
 }
 
-func NewJwtService(keys JwkRepository, users users.Repository, apps applications.Repository) JwtService {
+func NewJwtService(keys JwkRepository, users users.Repository, apps apps.Repository) JwtService {
 	jwtSigning := NewJwtSigningService(keys)
 	return &jwtServiceImpl{
 		keys:       keys,

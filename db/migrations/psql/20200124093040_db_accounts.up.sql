@@ -58,17 +58,19 @@ EXECUTE PROCEDURE trigger_set_updated();
 
 CREATE TABLE IF NOT EXISTS Applications
 (
-    id          uuid      NOT NULL DEFAULT uuid_generate_v4(),
-    client_id   VARCHAR   NOT NULL UNIQUE,
-    codename    VARCHAR   NOT NULL UNIQUE,
-    description VARCHAR   NULL,
-    name        VARCHAR   NOT NULL,
-    state       VARCHAR   NOT NULL DEFAULT 'created', -- CREATED, ACTIVE, LOCKED, DELETED
-    type        VARCHAR   NOT NULL DEFAULT 'public',  -- INTERNAL, PUBLIC, CONFIDENTIAL
+    id               uuid      NOT NULL DEFAULT uuid_generate_v4(),
+    client_id        VARCHAR   NOT NULL UNIQUE,
+    codename         VARCHAR   NOT NULL UNIQUE,
+    description      VARCHAR   NULL,
+    name             VARCHAR   NOT NULL,
+    state            VARCHAR   NOT NULL DEFAULT 'created', -- CREATED, ACTIVE, LOCKED, DELETED
+    type             VARCHAR   NOT NULL DEFAULT 'public',  -- INTERNAL, PUBLIC, CONFIDENTIAL
+    redirect_uris    TEXT      NULL,
+    available_scopes TEXT      NULL,
 
-    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at  TIMESTAMP NULL,
+    created_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at       TIMESTAMP NULL,
     PRIMARY KEY (id)
 );
 

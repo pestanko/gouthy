@@ -1,7 +1,6 @@
-package controllers
+package api
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
@@ -30,17 +29,21 @@ func (ctrl *UsersController) GetOne(context *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(context)
 	sid := ctrl.Http.Param(ctx, "uid")
 
-	user, err := ctrl.findUser(ctx, sid)
+	user, err := ctrl.Users.GetByAnyId(ctx, sid)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
 	if user == nil {
-		return
+		ctrl.Http.Fail(ctx, api_errors.NewUserNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
+	} else {
+		ctrl.Http.JSON(ctx, 200, user)
+
 	}
 
-	ctrl.Http.JSON(ctx, 200, user)
 }
 
 func (ctrl *UsersController) List(context *gin.Context) {
@@ -61,6 +64,13 @@ func (ctrl *UsersController) Delete(context *gin.Context) {
 	found, err := ctrl.Users.GetByAnyId(ctx, sid)
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
+		return
+	}
+
+	if found == nil {
+		ctrl.Http.Fail(ctx, api_errors.NewUserNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
 		return
 	}
 
@@ -95,10 +105,17 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 	ctx := ctrl.Http.NewControllerContext(c)
 	sid := ctrl.Http.Param(ctx, "uid")
 
-	foundUser, err := ctrl.Users.GetByAnyId(ctx, sid)
+	found, err := ctrl.Users.GetByAnyId(ctx, sid)
 
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
+		return
+	}
+
+	if found == nil {
+		ctrl.Http.Fail(ctx, api_errors.NewUserNotFound().WithDetail(api_errors.ErrorDetail{
+			"id": sid,
+		}))
 		return
 	}
 
@@ -107,7 +124,7 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
-	user, err := ctrl.Users.Update(ctx, foundUser.ID, &updateUser)
+	user, err := ctrl.Users.Update(ctx, found.ID, &updateUser)
 
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
@@ -119,15 +136,4 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 
 func (ctrl *UsersController) UpdatePassword(c *gin.Context) {
 
-}
-
-func (ctrl *UsersController) findUser(ctx context.Context, sid string) (*users.UserDTO, error) {
-	found, err := ctrl.Users.GetByAnyId(ctx, sid)
-	if err != nil {
-		return nil, err
-	}
-	if found == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewNotFound().WithMessage("User not found"))
-	}
-	return found, nil
 }

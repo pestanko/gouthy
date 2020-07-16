@@ -28,15 +28,15 @@ type Facade interface {
 type facadeImpl struct {
 	users           Repository
 	secrets         SecretsRepository
-	getService      GetUsersService
+	findService     FindService
 	passwordService PasswordService
 }
 
 func NewUsersFacade(users Repository, secrets SecretsRepository) Facade {
 	return &facadeImpl{
-		users:      users,
-		secrets:    secrets,
-		getService: NewGetUsersService(users),
+		users:           users,
+		secrets:         secrets,
+		findService:     NewFindUsersService(users),
 		passwordService: NewPasswordService(users),
 	}
 }
@@ -91,7 +91,7 @@ func (f *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateDTO
 }
 
 func (f *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password *UpdatePasswordDTO) error {
-	var user, err = f.users.QueryOne(ctx, UserQuery{Id: id})
+	var user, err = f.users.QueryOne(ctx, FindQuery{Id: id})
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (f *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password 
 }
 
 func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
-	var user, err = f.users.QueryOne(ctx, UserQuery{Id: userId})
+	var user, err = f.users.QueryOne(ctx, FindQuery{Id: userId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"user_id":  user.ID,
@@ -117,7 +117,7 @@ func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 }
 
 func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]ListUserDTO, error) {
-	list, err := f.getService.Get(ctx, UserQuery{
+	list, err := f.findService.Find(ctx, FindQuery{
 		PaginationQuery: repositories.NewPaginationQuery(params.Limit, params.Offset),
 	})
 	if err != nil {
@@ -128,7 +128,7 @@ func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]ListUserDTO
 }
 
 func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
-	var user, err = f.getService.GetOne(ctx, UserQuery{Id: id})
+	var user, err = f.findService.FindOne(ctx, FindQuery{Id: id})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"user_id": id,
@@ -140,7 +140,7 @@ func (f *facadeImpl) Get(ctx context.Context, id uuid.UUID) (*UserDTO, error) {
 }
 
 func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserDTO, error) {
-	var user, err = f.getService.GetOne(ctx, UserQuery{Username: username})
+	var user, err = f.findService.FindOne(ctx, FindQuery{Username: username})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
 			"username": username,

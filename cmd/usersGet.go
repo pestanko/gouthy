@@ -28,7 +28,7 @@ import (
 // usersGetCmd represents the usersGet command
 var usersGetCmd = &cobra.Command{
 	Use:   "usersGet",
-	Short: "Get a user info",
+	Short: "Find a user info",
 	Long: `Gets a user info in JSON format. It is possible to provide multiple user IDs.
 They can be either uuid or username.
 	`,

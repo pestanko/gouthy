@@ -14,7 +14,7 @@ func CreateWellKnownController(app *infra.GouthyApp) *WellKnownController {
 	return &WellKnownController{App: app}
 }
 
-func RegisterWellKnownControllers(a *infra.GouthyApp, r *gin.RouterGroup) []web_utils.Controller {
+func registerWellKnownControllers(a *infra.GouthyApp, r *gin.RouterGroup) []web_utils.Controller {
 	var controllers = []web_utils.Controller{
 		CreateWellKnownController(a),
 	}

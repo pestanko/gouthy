@@ -3,7 +3,7 @@ package jwtlib
 import (
 	"context"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
 	uuid "github.com/satori/go.uuid"
@@ -41,7 +41,7 @@ func (claims *Claims) Serialize() jwt.MapClaims {
 
 type ClaimParams struct {
 	User          *users.UserDTO
-	Application   *applications.Application
+	Application   *apps.ApplicationDTO
 	ExpirationAdd int64
 	Issuer        string
 	Scopes        []string

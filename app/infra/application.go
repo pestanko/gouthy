@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
@@ -20,14 +20,14 @@ type Repositories struct {
 	Users       users.Repository
 	UserSecrets users.SecretsRepository
 	Jwk         jwtlib.JwkRepository
-	Apps        applications.Repository
-	AppsSecrets applications.SecretsRepository
+	Apps        apps.Repository
+	AppsSecrets apps.SecretsRepository
 }
 
 type Facades struct {
 	Auth  auth.Facade
 	Users users.Facade
-	Apps  applications.Facade
+	Apps  apps.Facade
 	Keys  jwtlib.KeysFacade
 }
 
@@ -51,8 +51,8 @@ func NewRepositories(app *GouthyApp) Repositories {
 	return Repositories{
 		Users:       users.NewUsersRepositoryDB(app.db),
 		UserSecrets: users.NewSecretsRepositoryDB(app.db),
-		Apps:        applications.NweApplicationsRepositoryDB(app.db),
-		AppsSecrets: applications.NewSecretsRepositoryDB(app.db),
+		Apps:        apps.NweApplicationsRepositoryDB(app.db),
+		AppsSecrets: apps.NewSecretsRepositoryDB(app.db),
 		Jwk:         jwtlib.NewJwkRepository(app.Config.Jwk.Keys),
 	}
 }
@@ -63,7 +63,7 @@ func NewFacades(app *GouthyApp) Facades {
 	return Facades{
 		Auth:  auth.NewAuthFacade(repos.Users, repos.Apps, repos.Jwk),
 		Users: users.NewUsersFacade(repos.Users, repos.UserSecrets),
-		Apps:  applications.NewApplicationsFacade(repos.Apps, repos.AppsSecrets),
+		Apps:  apps.NewApplicationsFacade(repos.Apps, repos.AppsSecrets),
 		Keys:  jwtlib.NewKeysFacade(repos.Users, repos.Jwk),
 	}
 }

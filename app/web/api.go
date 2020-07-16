@@ -2,19 +2,19 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
-	ctrl "github.com/pestanko/gouthy/app/web/controllers"
+	ctrl "github.com/pestanko/gouthy/app/web/api"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-type RestApi struct {
+type restApi struct {
 	server *WebServer
 }
 
-func NewRestApi(server *WebServer) *RestApi {
-	return &RestApi{server: server}
+func newRestApi(server *WebServer) *restApi {
+	return &restApi{server: server}
 }
 
-func (api *RestApi) Register(r *gin.RouterGroup) []web_utils.Controller {
+func (api *restApi) Register(r *gin.RouterGroup) []web_utils.Controller {
 	authController := api.NewAuthController()
 	usersController := api.NewUsersController()
 	var ctrls = []web_utils.Controller{
@@ -25,14 +25,14 @@ func (api *RestApi) Register(r *gin.RouterGroup) []web_utils.Controller {
 	return ctrls
 }
 
-func (api *RestApi) NewUsersController() *ctrl.UsersController {
+func (api *restApi) NewUsersController() *ctrl.UsersController {
 	return &ctrl.UsersController{
 		Users: api.server.App.Facades.Users,
 		Http:  api.server.httpTool,
 	}
 }
 
-func (api *RestApi) NewAuthController() *ctrl.AuthController {
+func (api *restApi) NewAuthController() *ctrl.AuthController {
 	usersFacade := api.server.App.Facades.Users
 	return &ctrl.AuthController{
 		Users:    usersFacade,

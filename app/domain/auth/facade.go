@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
@@ -84,7 +84,7 @@ func (auth *facadeImpl) LoginTOTP(ctx context.Context, state LoginState, totp To
 }
 
 func (auth *facadeImpl) LoginUsernamePassword(ctx context.Context, loginState LoginState, pwd PasswordLoginDTO) (LoginState, error) {
-	user, err := auth.users.QueryOne(ctx, users.UserQuery{Username: pwd.Username})
+	user, err := auth.users.QueryOne(ctx, users.FindQuery{Username: pwd.Username})
 
 	if err != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
@@ -110,7 +110,7 @@ func (auth *facadeImpl) LoginUsernamePassword(ctx context.Context, loginState Lo
 }
 
 func (auth *facadeImpl) LoginUsingSecret(ctx context.Context, loginState LoginState, secret SecretLoginDTO) (LoginState, error) {
-	// Get Entity
+	// Find Entity
 
 	// check secret
 
@@ -118,7 +118,7 @@ func (auth *facadeImpl) LoginUsingSecret(ctx context.Context, loginState LoginSt
 	return nil, nil
 }
 
-func NewAuthFacade(usersRepo users.Repository, apps applications.Repository, jwkRepo jwtlib.JwkRepository) Facade {
+func NewAuthFacade(usersRepo users.Repository, apps apps.Repository, jwkRepo jwtlib.JwkRepository) Facade {
 	jwkService := jwtlib.NewJwkService(jwkRepo, usersRepo)
 	jwtService := jwtlib.NewJwtService(jwkRepo, usersRepo, apps)
 	return &facadeImpl{

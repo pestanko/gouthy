@@ -1,6 +1,6 @@
-package applications
+package apps
 
-func ConvertModelsToList(list []applicationModel) (result []ListApplicationDTO) {
+func ConvertModelsToList(list []Application) (result []ListApplicationDTO) {
 	for _, user := range list {
 		item := ListApplicationDTO{
 			baseApplicationDTO: convertModelToBase(&user),
@@ -10,7 +10,7 @@ func ConvertModelsToList(list []applicationModel) (result []ListApplicationDTO) 
 	return result
 }
 
-func convertModelToBase(app *applicationModel) baseApplicationDTO {
+func convertModelToBase(app *Application) baseApplicationDTO {
 	if app == nil {
 		return baseApplicationDTO{}
 	}
@@ -22,11 +22,11 @@ func convertModelToBase(app *applicationModel) baseApplicationDTO {
 	}
 }
 
-func ConvertModelToDTO(app *applicationModel) *Application {
+func ConvertModelToDTO(app *Application) *ApplicationDTO {
 	if app == nil {
 		return nil
 	}
-	return &Application{
+	dto := ApplicationDTO{
 		baseApplicationDTO: convertModelToBase(app),
 		Description:        app.Description,
 		ClientId:           app.ClientId,
@@ -35,5 +35,8 @@ func ConvertModelToDTO(app *applicationModel) *Application {
 		CreatedAt:          app.CreatedAt,
 		UpdatedAt:          app.UpdatedAt,
 		DeletedAt:          app.DeletedAt,
+		RedirectUris:       app.RedirectUris(),
+		AvailableScopes:    app.Scopes(),
 	}
+	return &dto
 }

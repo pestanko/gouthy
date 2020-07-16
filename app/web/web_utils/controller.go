@@ -51,11 +51,8 @@ func (http *HTTPTools) Fail(ctx context.Context, err api_errors.ApiError) {
 }
 
 func (http *HTTPTools) WriteErr(ctx context.Context, err error) {
-	http.Fail(ctx, api_errors.NewApiError().WithError(err))
-}
-
-func (http *HTTPTools) ParseUUID(ctx context.Context, id string) (uuid.UUID, error) {
-	return uuid.FromString(id)
+	shared.LogError(shared.GetLogger(ctx), err)
+	http.Fail(ctx, intoApiError(err))
 }
 
 func (http *HTTPTools) Param(ctx context.Context, key string) string {
@@ -65,4 +62,13 @@ func (http *HTTPTools) Param(ctx context.Context, key string) string {
 
 func (http *HTTPTools) Gin(ctx context.Context) *gin.Context {
 	return ctx.Value("gin").(*gin.Context)
+}
+
+func intoApiError(err error) api_errors.ApiError {
+	switch v := err.(type) {
+	case shared.GouthyError:
+		return api_errors.FromGouthyError(v)
+	default:
+		return api_errors.NewApiError().WithError(err)
+	}
 }

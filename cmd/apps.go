@@ -19,7 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
@@ -29,11 +29,11 @@ import (
 // appsCmd represents the apps command
 var appsCmd = &cobra.Command{
 	Use:   "apps",
-	Short: "Manage applications",
+	Short: "Manage apps",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
-Cobra is a CLI library for Go that empowers applications.
+Cobra is a CLI library for Go that empowers apps.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -42,7 +42,7 @@ to quickly create a Cobra application.`,
 }
 
 func listAllApps(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
-	listEntities, err := app.Facades.Apps.List(ctx, applications.ListParams{})
+	listEntities, err := app.Facades.Apps.List(ctx, apps.ListParams{})
 	if err != nil {
 		return err
 	}

@@ -39,9 +39,9 @@ func (s *WebServer) RegisterRoutes() error {
 	apiRoute := s.Router.Group("/api")
 	v1Route := apiRoute.Group("/v1")
 
-	NewRestApi(s).Register(v1Route)
-	wellKnownRoute := s.Router.Group("./.well-known")
-	RegisterWellKnownControllers(s.App, wellKnownRoute)
+	newRestApi(s).Register(v1Route)
+	registerWellKnownControllers(s.App, s.Router.Group("./.well-known"))
+	newPages(s).Register(s.Router.Group("/pages"))
 
 	return nil
 }

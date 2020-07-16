@@ -19,14 +19,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pestanko/gouthy/app/domain/applications"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
 )
 
-var appDTO applications.CreateDTO
+var appDTO apps.CreateDTO
 var appSecret string
 
 // appsCreateCmd represents the appsCreate command
@@ -36,7 +36,7 @@ var appsCreateCmd = &cobra.Command{
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
-Cobra is a CLI library for Go that empowers applications.
+Cobra is a CLI library for Go that empowers apps.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
