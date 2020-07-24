@@ -105,8 +105,12 @@ func (repo *JwkRepositoryImpl) Generate(ctx context.Context, params JwkGenerateP
 }
 
 func (repo *JwkRepositoryImpl) updatePrivateKeySymlink(ctx context.Context, link string, privateKeyPem string) error {
-	if _, err := os.Lstat(link); err == nil {
-		if err := os.Remove(link); err != nil {
+	if _, err := os.Lstat(repo.path(link)); err == nil {
+		shared.GetLogger(ctx).WithFields(log.Fields{
+			"link":   link,
+			"keyPem": privateKeyPem,
+		}).Debug("Removing existing latest symlink")
+		if err := os.Remove(repo.path(link)); err != nil {
 			return fmt.Errorf("failed to unlink: %+v", err)
 		}
 	}

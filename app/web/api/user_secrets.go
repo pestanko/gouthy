@@ -15,7 +15,7 @@ func NewSecretsController(entitiesFacade users.Facade, http *web_utils.HTTPTools
 	return &UserSecretsController{Users: entitiesFacade, Http: http}
 }
 
-func (ctrl *UserSecretsController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *UserSecretsController) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
 	r.GET("/:sid", ctrl.GetOne)
@@ -23,7 +23,6 @@ func (ctrl *UserSecretsController) RegisterRoutes(r *gin.RouterGroup) web_utils.
 	r.PUT("/:sid", ctrl.Update)
 	r.PATCH("/:sid", ctrl.Update)
 	r.POST("/:sid/revoke", ctrl.Revoke)
-	return ctrl
 }
 
 func (ctrl *UserSecretsController) List(context *gin.Context) {

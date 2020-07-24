@@ -27,7 +27,7 @@ type SecretModel struct {
 }
 
 func (SecretModel) TableName() string {
-	return "UserSecrets"
+	return "usersecrets"
 }
 
 func (s SecretModel) IsExpired() bool {

@@ -19,7 +19,7 @@ type LoginCheck interface {
 }
 
 //
-// LoginPage Check password
+// loginPage Check password
 //
 type LoginCheckPassword struct {
 	passwordService users.PasswordService
@@ -41,5 +41,5 @@ func (c *LoginCheckPassword) Check(ctx context.Context, loginState LoginState, c
 }
 
 func (LoginCheckPassword) CheckName() string {
-	return "password_check"
+	return StepLoginPassword
 }

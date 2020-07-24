@@ -66,14 +66,13 @@ func executeLoginPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.
 		return fmt.Errorf("unable to find user: %s", username)
 	}
 
-	loginState := auth.NewLoginState(user.ID)
-	loginState, err = app.Facades.Auth.LoginUsernamePassword(ctx, loginState, auth.PasswordLoginDTO{
+	loginState, err := app.Facades.Auth.Login(ctx, auth.Credentials{
 		Username: username,
 		Password: password,
 	})
 
 	if loginState == nil || loginState.IsNotOk() {
-		return fmt.Errorf("fogin failed for user %s", username)
+		return fmt.Errorf("login failed for user %s", username)
 	}
 
 	application, err := app.Facades.Apps.GetByAnyId(ctx, AdminConsoleApp)

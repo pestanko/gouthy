@@ -2,16 +2,32 @@ package auth
 
 import uuid "github.com/satori/go.uuid"
 
+const (
+	StepLoginPassword = "login_password"
+	StepLoginTotp     = "login_totp"
+	StepLoginSecret   = "login_secret"
+	StepFindUser      = "find_user"
+)
+
+func NewLoginStep(name string, state LoginStateStatus) LoginStep {
+	return &loginStepImpl{name: name, state: state}
+}
+
 type LoginStep interface {
 	Name() string
 	State() LoginStateStatus
 	IsSuccess() bool
 	IsFail() bool
+	IsError() bool
 }
 
 type loginStepImpl struct {
 	name  string
 	state LoginStateStatus
+}
+
+func (step *loginStepImpl) IsError() bool {
+	return step.state == Error
 }
 
 func (step *loginStepImpl) State() LoginStateStatus {
@@ -27,10 +43,6 @@ func (step *loginStepImpl) IsFail() bool {
 }
 func (step *loginStepImpl) Name() string {
 	return step.name
-}
-
-func NewLoginStep(name string, state LoginStateStatus) LoginStep {
-	return &loginStepImpl{name: name, state: state}
 }
 
 type LoginStateStatus string
@@ -86,11 +98,29 @@ func (state *loginStateImpl) IsError() bool {
 
 func (state *loginStateImpl) State() LoginStateStatus {
 	for _, item := range state.loginSteps {
-		if item.IsFail() {
-			return Failed
+		if item.State() != Success {
+			return item.State()
 		}
 	}
 	return Success
+}
+
+func (state *loginStateImpl) GetUnsuccessfulStep() LoginStep {
+	for _, item := range state.loginSteps {
+		if item.State() != Success {
+			return item
+		}
+	}
+	return nil
+}
+
+func (state *loginStateImpl) GetStepByName(name string) LoginStep {
+	for _, item := range state.loginSteps {
+		if item.Name() == name {
+			return item
+		}
+	}
+	return nil
 }
 
 func (state *loginStateImpl) Steps() *[]LoginStep {

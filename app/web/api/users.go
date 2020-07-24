@@ -7,12 +7,19 @@ import (
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
+func NewUsersController(tools *web_utils.HTTPTools) *UsersController {
+	return &UsersController{
+		Users: tools.App.Facades.Users,
+		Http:  tools,
+	}
+}
+
 type UsersController struct {
 	Users users.Facade
 	Http  *web_utils.HTTPTools
 }
 
-func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) web_utils.Controller {
+func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) {
 
 	r.GET("", ctrl.List)
 	r.POST("", ctrl.Create)
@@ -21,8 +28,6 @@ func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) web_utils.Contro
 	r.PATCH("/:uid", ctrl.Update)
 	r.DELETE("/:uid", ctrl.Delete)
 	r.POST("/:uid/password", ctrl.UpdatePassword)
-
-	return ctrl
 }
 
 func (ctrl *UsersController) GetOne(context *gin.Context) {

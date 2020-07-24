@@ -47,7 +47,7 @@ func listKeys(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, arg
 	}
 	// https://github.com/jedib0t/go-pretty/blob/master/cmd/demo-table/demo.go
 	tw := table.NewWriter()
-	tw.SetTitle("Gouthy users")
+	tw.SetTitle("Gouthy RSA Keys")
 	tw.SetIndexColumn(1)
 	tw.AppendHeader(table.Row{"#", "ID", "Algorithm"})
 

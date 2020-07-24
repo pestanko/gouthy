@@ -54,7 +54,7 @@ func (a *Application) SetScopes(scopes []string) {
 }
 
 func (Application) TableName() string {
-	return "Applications"
+	return "applications"
 }
 
 func (a *Application) RedirectUris() []string {

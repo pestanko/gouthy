@@ -4,11 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	log "github.com/sirupsen/logrus"
 )
+
+func NewAuthController(tools *web_utils.HTTPTools) *AuthController {
+	return &AuthController{
+		Users: tools.App.Facades.Users,
+		Auth:  tools.App.Facades.Auth,
+		Http:  tools,
+	}
+}
 
 type AuthController struct {
 	Users users.Facade
@@ -24,80 +30,69 @@ type Tokens struct {
 	TokenType    string `json:"token_type"`
 }
 
-func (ctrl *AuthController) RegisterRoutes(authRoute *gin.RouterGroup) web_utils.Controller {
-	loginRoute := authRoute.Group("/login")
-	authRoute.POST("/register", ctrl.Register)
-	loginRoute.POST("/password", ctrl.LoginPassword)
-	loginRoute.POST("/secret", ctrl.LoginSecret)
+func (c *AuthController) RegisterRoutes(r *gin.RouterGroup) {
+	loginRoute := r.Group("/login")
+	r.POST("/register", c.Register)
+	loginRoute.POST("/password", c.LoginPassword)
+	loginRoute.POST("/secret", c.LoginSecret)
 
-	oauth2Route := authRoute.Group("/oauth2")
-	oauth2Route.GET("/authorize", ctrl.OAuth2AuthorizeEndpoint)
-	oauth2Route.POST("/token", ctrl.OAuth2TokenEndpoint)
-	oauth2Route.GET("/userinfo", ctrl.OAuth2UserInfoEndpoint)
-	oauth2Route.GET("/certs", ctrl.OAuth2CertificatesEndpoint)
-
-	return ctrl
+	oauth2Route := r.Group("/oauth2")
+	oauth2Route.GET("/authorize", c.OAuth2AuthorizeEndpoint)
+	oauth2Route.POST("/token", c.OAuth2TokenEndpoint)
+	oauth2Route.GET("/userinfo", c.OAuth2UserInfoEndpoint)
+	oauth2Route.GET("/certs", c.OAuth2CertificatesEndpoint)
 }
 
-func (ctrl *AuthController) LoginPassword(context *gin.Context) {
-	ctx := ctrl.Http.NewControllerContext(context)
-	var loginDTO auth.PasswordLoginDTO
-	if err := context.BindJSON(&loginDTO); err != nil {
-		ctrl.Http.WriteErr(ctx, err)
-		return
-	}
-	user, err := ctrl.Users.GetByUsername(ctx, loginDTO.Username)
-	if err != nil {
-		ctrl.Http.WriteErr(ctx, err)
+type PasswordLoginDTO struct {
+	Username string `json:"username" form:"username"`
+	Password string `json:"password" form:"password"`
+}
+
+func (c *AuthController) LoginPassword(context *gin.Context) {
+	ctx := c.Http.NewControllerContext(context)
+	var credentials PasswordLoginDTO
+	if err := context.BindJSON(&credentials); err != nil {
+		c.Http.WriteErr(ctx, err)
 		return
 	}
 
-	if user == nil {
-		ctrl.Http.Fail(ctx, api_errors.NewUserNotFound().WithDetail(api_errors.ErrorDetail{
-			"id": loginDTO.Username,
+	loginState, err := c.Auth.Login(ctx, auth.Credentials{
+		Username: credentials.Username,
+		Password: credentials.Password,
+	})
+
+	if err != nil {
+		c.Http.Fail(ctx, api_errors.NewUnauthorizedError().WithError(err).WithDetail(api_errors.ErrorDetail{
+			"username": credentials.Username,
 		}))
 		return
 	}
 
-	loginState := auth.NewLoginState(user.ID)
-	loginState, err = ctrl.Auth.LoginUsernamePassword(ctx, loginState, loginDTO)
-
-	if err != nil {
-		ctrl.Http.Fail(ctx, api_errors.NewUnauthorizedError().WithError(err).WithDetail(api_errors.ErrorDetail{
-			"username": loginDTO.Username,
-		}))
-		return
-	}
-
-	shared.GetLogger(ctx).WithFields(log.Fields{
-		"loginState": loginState,
-		"user_id": user.ID,
-	}).Info("Creating login State")
-	ctrl.Http.JSON(ctx, 200, loginState)
+	c.Http.JSON(ctx, 200, loginState)
 }
 
-func (ctrl *AuthController) LoginSecret(context *gin.Context) {
+func (c *AuthController) LoginSecret(context *gin.Context) {
 
 }
 
-func (ctrl *AuthController) Register(context *gin.Context) {
+func (c *AuthController) Register(context *gin.Context) {
 
 }
 
-func (ctrl *AuthController) OAuth2AuthorizeEndpoint(context *gin.Context) {
-	ctx := ctrl.Http.NewControllerContext(context)
-	authorizationRequest := web_utils.OAuth2ParseAuthorizationRequest(context)
+func (c *AuthController) OAuth2AuthorizeEndpoint(context *gin.Context) {
+	//ctx := c.Tools.NewControllerContext(context)
+	//authorizationRequest := web_utils.OAuth2ParseAuthorizationRequest(context)
 
 }
 
-func (ctrl *AuthController) OAuth2TokenEndpoint(context *gin.Context) {
+func (c *AuthController) OAuth2TokenEndpoint(context *gin.Context) {
 
 }
 
-func (ctrl *AuthController) OAuth2UserInfoEndpoint(context *gin.Context) {
+func (c *AuthController) OAuth2UserInfoEndpoint(context *gin.Context) {
 
 }
 
-func (ctrl *AuthController) OAuth2CertificatesEndpoint(context *gin.Context) {
+func (c *AuthController) OAuth2CertificatesEndpoint(context *gin.Context) {
 
 }

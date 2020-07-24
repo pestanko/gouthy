@@ -6,42 +6,46 @@ import (
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-type WebServer struct {
+type GouthyWebServer struct {
 	Router   *gin.Engine
 	App      *infra.GouthyApp
 	httpTool *web_utils.HTTPTools
+	controllers Controllers
 }
 
-func CreateWebServer(application *infra.GouthyApp) WebServer {
-	router := gin.Default()
-
-	return WebServer{
-		Router:   router,
-		App:      application,
-		httpTool: web_utils.NewHTTPTools(application),
+func CreateWebServer(application *infra.GouthyApp) *GouthyWebServer {
+	tools := web_utils.NewHTTPTools(application)
+	return &GouthyWebServer{
+		Router:      gin.Default(),
+		App:         application,
+		httpTool:    tools,
+		controllers: CreateControllers(tools),
 	}
 }
 
-func (s *WebServer) Serve() error {
+func (s *GouthyWebServer) Serve() error {
 	return s.Router.Run(s.App.Config.Server.Port)
 }
 
-func (s *WebServer) Run() error {
-
-	if err := s.RegisterRoutes(); err != nil {
-		return err
-	}
-
+func (s *GouthyWebServer) Run() error {
+	RegisterRoutes(s)
 	return s.Serve()
 }
 
-func (s *WebServer) RegisterRoutes() error {
-	apiRoute := s.Router.Group("/api")
-	v1Route := apiRoute.Group("/v1")
 
-	newRestApi(s).Register(v1Route)
-	registerWellKnownControllers(s.App, s.Router.Group("./.well-known"))
-	newPages(s).Register(s.Router.Group("/pages"))
-
-	return nil
+type Controllers struct {
+	pages *pagesControllers
+	api   *apisControllers
+	WellKnown *WellKnownController
 }
+
+
+func CreateControllers(tools *web_utils.HTTPTools) Controllers {
+	return Controllers{
+		pages:     NewPagesControllers(tools),
+		api:       NewApiControllers(tools),
+		WellKnown: NewWellKnownController(tools),
+	}
+}
+
+
