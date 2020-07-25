@@ -32,12 +32,12 @@ type facadeImpl struct {
 	passwordService PasswordService
 }
 
-func NewUsersFacade(users Repository, secrets SecretsRepository) Facade {
+func NewUsersFacade(users Repository, secrets SecretsRepository, services Services) Facade {
 	return &facadeImpl{
 		users:           users,
 		secrets:         secrets,
-		findService:     NewFindUsersService(users),
-		passwordService: NewPasswordService(users),
+		findService:     services.Find,
+		passwordService: services.Password,
 	}
 }
 

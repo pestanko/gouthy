@@ -8,8 +8,8 @@ import (
 func NewPagesControllers(tools *web_utils.HTTPTools) *pagesControllers {
 	return &pagesControllers{
 		login: pages.NewLoginPagesController(tools,
-			tools.App.Facades.Users,
-			tools.App.Facades.Auth),
+			tools.App.DI.Users.Facade,
+			tools.App.DI.Auth.Facade),
 		password:     pages.NewPasswordController(tools),
 		registration: pages.NewRegistrationController(tools),
 		oauth2:       pages.NewOAuth2Controller(tools),

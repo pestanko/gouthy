@@ -2,8 +2,6 @@ package jwtlib
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/apps"
-	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 type JwtService interface {
@@ -15,12 +13,10 @@ type JwtService interface {
 	CreateSignedIdToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
 }
 
-
-
 type jwtServiceImpl struct {
 	keys       JwkRepository
-	users      users.Repository
-	apps       apps.Repository
+	//users      users.Repository
+	//apps       apps.Repository
 	jwtSigning JwtSigningService
 }
 
@@ -52,7 +48,7 @@ func (j *jwtServiceImpl) CreateSignedIdToken(ctx context.Context, params TokenCr
 }
 
 func (j *jwtServiceImpl) CreateAccessToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
-	const ExpTime = HOUR
+	const ExpTime = AccessTokenExpiration
 	claims, err := j.makeClaims(ctx, params, ExpTime, "access_token")
 	if err != nil {
 		return nil, err
@@ -62,7 +58,7 @@ func (j *jwtServiceImpl) CreateAccessToken(ctx context.Context, params TokenCrea
 }
 
 func (j *jwtServiceImpl) CreateRefreshToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
-	const ExpTime = HOUR * 24 * 7
+	const ExpTime = RefreshTokenExpiration
 	claims, err := j.makeClaims(ctx, params, ExpTime, "refresh_token")
 	if err != nil {
 		return nil, err
@@ -72,7 +68,7 @@ func (j *jwtServiceImpl) CreateRefreshToken(ctx context.Context, params TokenCre
 }
 
 func (j *jwtServiceImpl) CreateIdToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
-	const ExpTime = HOUR * 8
+	const ExpTime = IdTokenExpiration
 	claims, err := j.makeClaims(ctx, params, ExpTime, "id_token")
 	if err != nil {
 		return nil, err
@@ -110,12 +106,10 @@ func (j *jwtServiceImpl) makeClaims(ctx context.Context, params TokenCreateParam
 	return claims, nil
 }
 
-func NewJwtService(keys JwkRepository, users users.Repository, apps apps.Repository) JwtService {
+func NewJwtService(keys JwkRepository) JwtService {
 	jwtSigning := NewJwtSigningService(keys)
 	return &jwtServiceImpl{
 		keys:       keys,
-		users:      users,
-		apps:       apps,
 		jwtSigning: jwtSigning,
 	}
 }

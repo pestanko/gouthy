@@ -12,8 +12,13 @@ func GetLogger(ctx context.Context) *log.Entry {
 	if opId := ctx.Value("operation_id"); opId != nil {
 		entry = entry.WithField("operation_id", opId.(string))
 	}
-	if identity := ctx.Value("identity"); identity != nil {
-		entry = entry.WithField("identity", identity)
+	id := ctx.Value("identity")
+	if id != nil {
+		entry = entry.WithFields(id.(LoggingIdentity).LogFields())
 	}
 	return entry
+}
+
+type LoggingIdentity interface {
+	LogFields() log.Fields
 }

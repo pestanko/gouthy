@@ -17,7 +17,7 @@ type PasswordServiceImpl struct {
 
 func (s *PasswordServiceImpl) CheckPassword(ctx context.Context, user *User, provided string) (bool, error) {
 	shared.GetLogger(ctx).WithFields(log.Fields{
-		"id":       user.ID,
+		"user_id":       user.ID,
 		"username": user.Username,
 	}).Debug("Checking password")
 	return user.CheckPassword(provided), nil

@@ -20,6 +20,7 @@ type FindQuery struct {
 	ClientId string
 	State    string
 	Type     string
+	AnyId    string
 }
 
 type Application struct {
@@ -69,19 +70,19 @@ func (a *Application) SetUris(uris []string) {
 	a.RedirectUrisStr = strings.Join(uris, "\n")
 }
 
-func NweApplicationsRepositoryDB(db *gorm.DB) Repository {
-	return &repositoryDB{
-		DB:     db,
-		common: repositories.NewCommonRepositoryDB(db, "Applications"),
-	}
-}
-
 type Repository interface {
 	Create(ctx context.Context, app *Application) error
 	Update(ctx context.Context, app *Application) error
 	Delete(ctx context.Context, app *Application) error
 	Query(ctx context.Context, query FindQuery) ([]Application, error)
 	QueryOne(ctx context.Context, query FindQuery) (*Application, error)
+}
+
+func NweApplicationsRepositoryDB(db *gorm.DB) Repository {
+	return &repositoryDB{
+		DB:     db,
+		common: repositories.NewCommonRepositoryDB(db, "Applications"),
+	}
 }
 
 type repositoryDB struct {
@@ -121,7 +122,10 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 	logFields := log.Fields{
 		"model": "application",
 	}
-	if query.Id != uuid.Nil {
+
+	iid := uuid.FromStringOrNil(query.AnyId)
+
+	if query.Id != uuid.Nil || iid != uuid.Nil {
 		db = db.Where("id = ?", query.Id)
 		logFields["id"] = query.Id
 	}
@@ -133,6 +137,10 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 	if query.Codename != "" {
 		db = db.Where("codename = ?", query.Codename)
 		logFields["username"] = query.Codename
+	}
+	if query.AnyId != "" && iid == uuid.Nil {
+		db = db.Where("codename = ? OR client_id = ?", query.AnyId, query.AnyId)
+		logFields["anyid"] = query.AnyId
 	}
 
 	if query.State != "" {

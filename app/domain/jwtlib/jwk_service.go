@@ -7,6 +7,10 @@ import (
 )
 
 const HOUR = 3600
+const DAY = HOUR * 24
+const AccessTokenExpiration = HOUR
+const RefreshTokenExpiration = 7 * DAY // WEEK
+const IdTokenExpiration = 8 * HOUR
 
 type JwkService interface {
 	GenerateNew(ctx context.Context) error
@@ -17,7 +21,6 @@ type JwkService interface {
 
 type jwkServiceImpl struct {
 	repo      JwkRepository
-	usersRepo users.Repository
 }
 
 func (facade *jwkServiceImpl) GetLatest(ctx context.Context) (Jwk, error) {
@@ -36,13 +39,12 @@ func (facade *jwkServiceImpl) GenerateNew(ctx context.Context) error {
 	return facade.repo.Generate(ctx, JwkGenerateParams{})
 }
 
-func NewJwkService(jwkRepo JwkRepository, usersRepo users.Repository) JwkService {
-	return &jwkServiceImpl{repo: jwkRepo, usersRepo: usersRepo}
+func NewJwkService(jwkRepo JwkRepository) JwkService {
+	return &jwkServiceImpl{repo: jwkRepo}
 }
 
 type TokenCreateParams struct {
-	User   *users.UserDTO
-	App    *apps.ApplicationDTO
+	User   *users.User
+	App    *apps.Application
 	Scopes []string
 }
-

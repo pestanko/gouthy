@@ -8,20 +8,14 @@ import (
 	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/shared"
 )
 
 type GouthyApp struct {
 	db      *gorm.DB
-	Config  *AppConfig
+	Config  *shared.AppConfig
 	Facades Facades
-}
-
-type Repositories struct {
-	Users       users.Repository
-	UserSecrets users.SecretsRepository
-	Jwk         jwtlib.JwkRepository
-	Apps        apps.Repository
-	AppsSecrets apps.SecretsRepository
+	DI      DI
 }
 
 type Facades struct {
@@ -31,7 +25,14 @@ type Facades struct {
 	Keys  jwtlib.KeysFacade
 }
 
-func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
+type DI struct {
+	Auth  auth.DiProvider
+	Users users.DiProvider
+	Apps  apps.DiProvider
+	Jwt   jwtlib.DiProvider
+}
+
+func GetDBConnection(config *shared.AppConfig) (*gorm.DB, error) {
 	return gorm.Open(
 		"postgres",
 		fmt.Sprintf("host=%v port=%v user=%v dbname=%v password=%v sslmode=%v",
@@ -40,30 +41,28 @@ func GetDBConnection(config *AppConfig) (*gorm.DB, error) {
 }
 
 // GetApplication - gets an application instance
-func GetApplication(config *AppConfig, db *gorm.DB) (GouthyApp, error) {
-	app := GouthyApp{Config: config, db: db}
-	registerFacades := NewFacades(&app)
-	app.Facades = registerFacades
+func GetApplication(config *shared.AppConfig, db *gorm.DB) (GouthyApp, error) {
+	app := GouthyApp{Config: config, db: db, DI: NewDI(db, config)}
 	return app, nil
 }
 
-func NewRepositories(app *GouthyApp) Repositories {
-	return Repositories{
-		Users:       users.NewUsersRepositoryDB(app.db),
-		UserSecrets: users.NewSecretsRepositoryDB(app.db),
-		Apps:        apps.NweApplicationsRepositoryDB(app.db),
-		AppsSecrets: apps.NewSecretsRepositoryDB(app.db),
-		Jwk:         jwtlib.NewJwkRepository(app.Config.Jwk.Keys),
+func NewDI(db *gorm.DB, cfg *shared.AppConfig) DI {
+	app := apps.NewDiProvider(db)
+	user := users.NewDiProvider(db)
+	jwtl := jwtlib.NewDiProvider(cfg.Jwk.Keys)
+	authProvider := auth.NewDiProvider(app.Services.Find, user.Services.Find, jwtl.Services.Jwk, jwtl.Services.Jwt, user.Services.Password)
+	return DI{
+		Auth:  authProvider,
+		Users: user,
+		Apps:  app,
 	}
 }
 
-func NewFacades(app *GouthyApp) Facades {
-	repos := NewRepositories(app)
-
+func newFacades(app *GouthyApp) Facades {
 	return Facades{
-		Auth:  auth.NewAuthFacade(repos.Users, repos.Apps, repos.Jwk),
-		Users: users.NewUsersFacade(repos.Users, repos.UserSecrets),
-		Apps:  apps.NewApplicationsFacade(repos.Apps, repos.AppsSecrets),
-		Keys:  jwtlib.NewKeysFacade(repos.Users, repos.Jwk),
+		Auth:  app.DI.Auth.Facade,
+		Users: app.DI.Users.Facade,
+		Apps:  app.DI.Apps.Facade,
+		Keys:  app.DI.Jwt.Facade,
 	}
 }

@@ -50,23 +50,30 @@ type loginCredentials struct {
 
 func (c *LoginPagesController) LoginPagePost(context *gin.Context) {
 	ctx := c.Http.NewControllerContext(context)
-	var credentials loginCredentials
+	var cred loginCredentials
 
-	if err := context.Bind(&credentials); err != nil {
+	if err := context.Bind(&cred); err != nil {
 		c.Http.WriteErr(ctx, err)
 		return
 	}
 
+	shared.GetLogger(ctx).WithFields(log.Fields{
+		"username": cred.Username,
+		"password": cred.Password, // TODO: Remove
+		"rs":       cred.RedirectState,
+		"state":    cred.State,
+	}).Debug("Provided data")
+
 	loginState, err := c.Auth.Login(ctx, auth.Credentials{
-		Username: credentials.Username,
-		Password: credentials.Password,
+		Username: cred.Username,
+		Password: cred.Password,
 	})
 
 	if loginState != nil && loginState.IsOk() {
-		c.doSuccessLogin(ctx, credentials, loginState)
+		c.doSuccessLogin(ctx, cred, loginState)
 		return
 	} else {
-		c.doErrorLogin(ctx, credentials, loginState, err)
+		c.doErrorLogin(ctx, cred, loginState, err)
 	}
 }
 
@@ -82,12 +89,15 @@ func (c *LoginPagesController) doSuccessLogin(ctx context.Context, credentials l
 	}
 	user, _ := c.Users.Get(ctx, bytes)
 	app, err := c.Http.GetCurrentAppContext(ctx)
-	tokens, err := c.Auth.CreateSignedTokensResponse(ctx, jwtlib.TokenCreateParams{
-		User:   user,
-		App:    app,
-		Scopes: nil,
-	})
-	gctx.SetCookie()
+	identity := auth.NewLoginIdentity(user, app, []string{"ui_login"})
+	tokens, err := c.Auth.CreateSignedTokensFromLoginIdentity(ctx, identity)
+	c.setTokensAsCookies(gctx, tokens)
+}
+
+func (c *LoginPagesController) setTokensAsCookies(gctx *gin.Context, tokens auth.SignedTokensDTO) {
+	domain := c.Http.App.Config.Server.Domain
+	gctx.SetCookie(web_utils.CookieAccessToken, tokens.AccessToken, jwtlib.HOUR, "/", domain, true, true)
+	gctx.SetCookie(web_utils.CookieRefreshToken, tokens.RefreshToken, jwtlib.RefreshTokenExpiration, "/", domain, true, true)
 }
 
 func printError(ctx context.Context, err error, credentials loginCredentials) {

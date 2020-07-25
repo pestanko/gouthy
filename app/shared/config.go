@@ -1,4 +1,4 @@
-package infra
+package shared
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -27,7 +27,8 @@ type DBConfig struct {
 }
 
 type ServerConfig struct {
-	Port string `json:"port" yaml:"port" mapstructure:"port"`
+	Port   string `json:"port" yaml:"port" mapstructure:"port"`
+	Domain string `json:"domain" yaml:"domain" mapstructure:"domain"`
 }
 
 type JwkConfig struct {
@@ -135,10 +136,8 @@ func GetAppConfig() (AppConfig, error) {
 }
 
 func setDefaults() {
-	viper.SetDefault("muni.url", "https://is.muni.cz")
-	viper.SetDefault("muni.course", "PB071")
-	viper.SetDefault("muni.faculty", 1433)
-	viper.SetDefault("parser", "default")
+	viper.SetDefault("server.domain", "localhost")
+	viper.SetDefault("server.port", 5000)
 	viper.SetDefault("dryrun", false)
 }
 

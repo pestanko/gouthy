@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/shared"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -29,7 +29,7 @@ var configCmd = &cobra.Command{
 	Short: "Show the current configuration",
 	Long:  `Show the current configuration`,
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := infra.GetAppConfig()
+		config, err := shared.GetAppConfig()
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 			os.Exit(1)

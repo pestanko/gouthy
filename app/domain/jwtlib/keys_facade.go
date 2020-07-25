@@ -2,7 +2,6 @@ package jwtlib
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 type KeysFacade interface {
@@ -27,7 +26,6 @@ func (keys *keysFacadeImpl) GenerateNewJwk(ctx context.Context) error {
 	return keys.jwk.GenerateNew(ctx)
 }
 
-func NewKeysFacade(users users.Repository, jwkRepo JwkRepository) KeysFacade {
-	jwkService := NewJwkService(jwkRepo, users)
+func NewKeysFacade(jwkService JwkService) KeysFacade {
 	return &keysFacadeImpl{jwk: jwkService}
 }

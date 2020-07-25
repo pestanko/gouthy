@@ -21,11 +21,31 @@ type Facade interface {
 	Get(ctx context.Context, appId uuid.UUID) (*ApplicationDTO, error)
 	GetByCodename(ctx context.Context, appId string) (*ApplicationDTO, error)
 	GetByAnyId(ctx context.Context, sid string) (*ApplicationDTO, error)
+	GetByClientId(ctx context.Context, sid string) (*ApplicationDTO, error)
 }
+
+
+func NewApplicationsFacade(apps Repository, secrets SecretsRepository, findService FindService) Facade {
+	return &facadeImpl{apps: apps, secrets: secrets}
+}
+
 
 type facadeImpl struct {
 	apps    Repository
 	secrets SecretsRepository
+	findService FindService
+}
+
+func (f *facadeImpl) GetByClientId(ctx context.Context, clientId string) (*ApplicationDTO, error) {
+	var app, err = f.apps.QueryOne(ctx, FindQuery{ClientId: clientId})
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"client_id": clientId,
+		}).Error("Unable to get an app")
+		return nil, err
+	}
+
+	return ConvertModelToDTO(app), nil
 }
 
 func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*ApplicationDTO, error) {
@@ -134,14 +154,12 @@ func (f *facadeImpl) GetByCodename(ctx context.Context, codename string) (*Appli
 }
 
 func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*ApplicationDTO, error) {
-	var uid, err = uuid.FromString(sid)
-	if err == nil {
-		return f.Get(ctx, uid)
+	one, err := f.findService.FindOne(ctx, FindQuery{AnyId: sid})
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"any_id": sid,
+		}).Error("Unable to get an app")
+		return nil, err
 	}
-
-	return f.GetByCodename(ctx, sid)
-}
-
-func NewApplicationsFacade(apps Repository, secrets SecretsRepository) Facade {
-	return &facadeImpl{apps: apps, secrets: secrets}
+	return ConvertModelToDTO(one), err
 }

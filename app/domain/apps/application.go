@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+const DefaultApplicationClientId = "default"
+const ConsoleApplicationClientId = "admin_console"
+
 // DTO
 
 type ApplicationDTO struct {

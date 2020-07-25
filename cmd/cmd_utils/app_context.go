@@ -11,7 +11,7 @@ import (
 
 func BindAppContext(fn func(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error, cmd *cobra.Command, args []string) {
 	var err error
-	config, err := infra.GetAppConfig()
+	config, err := shared.GetAppConfig()
 	checkError(err)
 
 
@@ -23,7 +23,7 @@ func BindAppContext(fn func(ctx context.Context, app *infra.GouthyApp, cmd *cobr
 	app, err := infra.GetApplication(&config, db)
 	checkError(err)
 
-	ctx := shared.NewOperationContext()
+	ctx := shared.NewContextWithConfiguration(&config)
 	ctx = context.WithValue(ctx, "client_id", "admin_console")
 
 	checkError(fn(ctx, &app, cmd, args))

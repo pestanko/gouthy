@@ -9,7 +9,7 @@ type FindService interface {
 	FindOne(ctx context.Context, params FindQuery) (*Application, error)
 }
 
-func NewGetApplicationsService(repo Repository) FindService {
+func NewFindAppsService(repo Repository) FindService {
 	return &findApplicationsServiceImpl{repo: repo}
 }
 

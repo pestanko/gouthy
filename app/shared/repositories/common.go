@@ -80,14 +80,14 @@ func (repo *CommonRepositoryDB) Delete(ctx context.Context, instance interface{}
 }
 
 func (repo *CommonRepositoryDB) ProcessQueryOne(db *gorm.DB, result interface{}, entry *log.Entry) (interface{}, error) {
-	db.FirstOrInit(&result)
-	if db.Error != nil {
-		if gorm.IsRecordNotFoundError(db.Error) {
+	dbResult := db.First(result)
+	if dbResult.Error != nil {
+		if gorm.IsRecordNotFoundError(dbResult.Error) {
 			entry.Debug("Record not found")
 			return nil, nil
 		}
-		entry.Error("Unable to query the record")
-		return nil, db.Error
+		entry.WithError(dbResult.Error).Error("Unable to query the record")
+		return nil, dbResult.Error
 	}
 	entry.Trace("Query the record")
 	return result, nil

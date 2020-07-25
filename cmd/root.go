@@ -16,11 +16,11 @@ limitations under the License.
 package cmd
 
 import (
-  "fmt"
-	"github.com/pestanko/gouthy/app/infra"
-  log "github.com/sirupsen/logrus"
-  "github.com/spf13/cobra"
-  "os"
+	"fmt"
+	"github.com/pestanko/gouthy/app/shared"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+	"os"
 )
 
 
@@ -66,8 +66,8 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-  infra.SetupLogger("")
-  if err := infra.LoadConfig(cfgFile); err != nil {
+  shared.SetupLogger("")
+  if err := shared.LoadConfig(cfgFile); err != nil {
     log.WithError(err).Error("Unable to load a config")
     os.Exit(1)
   }

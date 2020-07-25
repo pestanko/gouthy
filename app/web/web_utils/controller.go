@@ -2,17 +2,21 @@ package web_utils
 
 import (
 	"context"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 )
+
+const CookieAccessToken = "JWT_ACCESS"
+const CookieRefreshToken = "JWT_REFRESH"
 
 type Controller interface {
 	RegisterRoutes(router *gin.RouterGroup)
@@ -29,17 +33,24 @@ func NewHTTPTools(app *infra.GouthyApp) *HTTPTools {
 }
 
 func (tool *HTTPTools) NewControllerContext(gin *gin.Context) context.Context {
-	ctx := shared.NewOperationContext()
-	identity := extractIdentityFromRequest(ctx, gin) // TODO
-
-	ctx = context.WithValue(ctx, "identity", identity)
+	ctx := shared.NewContextWithConfiguration(tool.App.Config)
 	ctx = context.WithValue(ctx, "gin", gin)
+
+	identity := tool.extractIdentityFromRequest(ctx) // TODO
+	if identity == nil {
+		identity = defaultAnonymousIdentity(ctx)
+	}
+	ctx = context.WithValue(ctx, "identity", identity)
+	shared.GetLogger(ctx).Debug("Created a new context with identity")
 	return ctx
 }
 
-type UserIdentity struct {
-	UserId uuid.UUID
-	AppId uuid.UUID
+func defaultAnonymousIdentity(ctx context.Context) *auth.LoginIdentity {
+	return &auth.LoginIdentity{
+		UserId:   uuid.Nil.String(),
+		ClientId: "default",
+		Scopes:   []string{"unauthorized", "anonymous"},
+	}
 }
 
 type ControllerContext struct {
@@ -107,42 +118,71 @@ func (tool *HTTPTools) RedirectWithRedirectState(ctx context.Context) error {
 
 func (tool *HTTPTools) GetCurrentAppContext(ctx context.Context) (*apps.ApplicationDTO, error) {
 	identity := tool.GetIdentity(ctx)
-	return tool.App.Facades.Apps.GetByAnyId(ctx, identity.AppId.String())
-}
+	clientId := identity.ClientId
 
-func (tool *HTTPTools) GetIdentity(ctx context.Context) UserIdentity {
-	return ctx.Value("identity").(UserIdentity)
-}
-
-
-
-func (tool *HTTPTools) ExtractJwt(ctx context.Context) (*jwt.Token, error) {
-
-}
-
-
-func intoApiError(err error) api_errors.ApiError {
-	switch v := err.(type) {
-	case shared.GouthyError:
-		return api_errors.FromGouthyError(v)
-	default:
-		return api_errors.NewApiError().WithError(err)
+	if clientId == "" {
+		clientId = apps.DefaultApplicationClientId
 	}
+
+	return tool.App.DI.Apps.Facade.GetByClientId(ctx, clientId)
 }
 
-func extractIdentityFromRequest(gin *gin.Context) UserIdentity {
-	extractJwkFromRequest(gin)
+func (tool *HTTPTools) GetIdentity(ctx context.Context) auth.LoginIdentity {
+	return ctx.Value("identity").(auth.LoginIdentity)
 }
 
+func (tool *HTTPTools) ExtractJwt(ctx context.Context) (jwtlib.Jwt, error) {
+	rawToken, err := extractJwkStringFromRequest(tool.Gin(ctx))
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"raw_token": rawToken, // TODO anonymize
+		}).Error("")
+		return nil, err
+	}
+	if rawToken == "" {
+		shared.GetLogger(ctx).Debug("No token was found")
+		return nil, err
+	}
+	token, err := tool.App.Facades.Auth.ParseAndValidateJwt(ctx, rawToken)
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+			"raw_token": rawToken, // TODO anonymize
+		}).Error("Unable to parse or verify the token")
+		return token, err
+	}
+	return token, nil
+}
 
-func extractJwkFromRequest(gin *gin.Context) (jwtlib.Jwt, error) {
+func (tool *HTTPTools) extractIdentityFromRequest(ctx context.Context) *auth.LoginIdentity {
+	token, _ := tool.ExtractJwt(ctx)
+	if token != nil {
+		identity, err := tool.App.Facades.Auth.CreateLoginIdentityFromToken(ctx, token)
+		if err != nil {
+			shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
+				"jti": token.ID(),
+				"uid": token.UserId(),
+				"client_id": token.ClientId(),
+			}).Error("Unable to create identity")
+		}
+		return identity
+	}
+
+	return nil
+}
+
+func extractJwkStringFromRequest(gin *gin.Context) (string, error) {
 	// Extract from header
 	authHeaderValue := extractAuthHeader(gin, "Bearer")
 	if authHeaderValue != "" {
-		return jwtlib.ParseString(authHeaderValue), nil
+		return authHeaderValue, nil
 	}
 
 	// Extract from cookie
+	accessToken, err := gin.Cookie(CookieAccessToken)
+	if err == http.ErrNoCookie {
+		return "", nil
+	}
+	return accessToken, err
 }
 
 func extractAuthHeader(gin *gin.Context, prefix string) string {
@@ -152,4 +192,13 @@ func extractAuthHeader(gin *gin.Context, prefix string) string {
 		return strings.TrimPrefix(authHeader, prefix)
 	}
 	return ""
+}
+
+func intoApiError(err error) api_errors.ApiError {
+	switch v := err.(type) {
+	case shared.GouthyError:
+		return api_errors.FromGouthyError(v)
+	default:
+		return api_errors.NewApiError().WithError(err)
+	}
 }

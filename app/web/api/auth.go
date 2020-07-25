@@ -10,8 +10,8 @@ import (
 
 func NewAuthController(tools *web_utils.HTTPTools) *AuthController {
 	return &AuthController{
-		Users: tools.App.Facades.Users,
-		Auth:  tools.App.Facades.Auth,
+		Users: tools.App.DI.Users.Facade,
+		Auth:  tools.App.DI.Auth.Facade,
 		Http:  tools,
 	}
 }

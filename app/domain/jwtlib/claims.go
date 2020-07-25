@@ -40,8 +40,8 @@ func (claims *Claims) Serialize() jwt.MapClaims {
 }
 
 type ClaimParams struct {
-	User          *users.UserDTO
-	Application   *apps.ApplicationDTO
+	User          *users.User
+	Application   *apps.Application
 	ExpirationAdd int64
 	Issuer        string
 	Scopes        []string

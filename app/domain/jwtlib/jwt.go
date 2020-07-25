@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+func NewJwt(token *jwt.Token) Jwt {
+	return &jwtImpl{
+		token: token,
+	}
+}
+
 type Jwt interface {
 	JwkID() string
 	ClientId() string
@@ -19,10 +25,25 @@ type Jwt interface {
 
 	IssuedAt() time.Time
 	ExpiresAt() time.Time
+	UserId() string
+	AppId() string
+	Scopes() []string
 }
 
 type jwtImpl struct {
 	token *jwt.Token
+}
+
+func (j *jwtImpl) Scopes() []string {
+	return j.Scopes()
+}
+
+func (j *jwtImpl) AppId() string {
+	return j.Audience()
+}
+
+func (j *jwtImpl) UserId() string {
+	return j.Subject()
 }
 
 func (j *jwtImpl) Issuer() string {
@@ -74,12 +95,6 @@ func (j *jwtImpl) timeClaim(claim string) time.Time {
 		return time.Unix(v, 0)
 	}
 	return time.Time{}
-}
-
-func NewJwt(token *jwt.Token) Jwt {
-	return &jwtImpl{
-		token: token,
-	}
 }
 
 type JwtSigningService interface {

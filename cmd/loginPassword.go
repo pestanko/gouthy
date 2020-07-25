@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"os"
@@ -83,12 +82,8 @@ func executeLoginPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.
 		return fmt.Errorf("unable to find application: %s", AdminConsoleApp)
 	}
 
-	params := jwtlib.TokenCreateParams{
-		User:   user,
-		App:    application,
-		Scopes: []string{"console_login"},
-	}
-	accessToken, err := app.Facades.Auth.CreateSignedTokensResponse(ctx, params)
+	identity := auth.NewLoginIdentity(user, application, []string{"console_login"})
+	accessToken, err := app.Facades.Auth.CreateSignedTokensFromLoginIdentity(ctx, identity)
 	if err != nil {
 		return err
 	}

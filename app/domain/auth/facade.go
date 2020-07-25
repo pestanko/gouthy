@@ -11,14 +11,23 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewAuthFacade(usersRepo users.Repository, apps apps.Repository, jwkRepo jwtlib.JwkRepository) Facade {
-	jwkService := jwtlib.NewJwkService(jwkRepo, usersRepo)
-	jwtService := jwtlib.NewJwtService(jwkRepo, usersRepo, apps)
+type Facade interface {
+	Login(ctx context.Context, credentials Credentials) (LoginState, error)
+
+	CreateSignedTokensFromLoginIdentity(ctx context.Context, identity *LoginIdentity) (SignedTokensDTO, error)
+	CreateLoginIdentityFromToken(ctx context.Context, token jwtlib.Jwt) (*LoginIdentity, error)
+
+	ParseJwt(ctx context.Context, str string) (jwtlib.Jwt, error)
+	ParseAndValidateJwt(ctx context.Context, str string) (jwtlib.Jwt, error)
+}
+
+func NewAuthFacade(findUsers users.FindService, findApps apps.FindService, jwt jwtlib.JwtService, jwk jwtlib.JwkService, passwdService users.PasswordService) Facade {
 	return &facadeImpl{
-		users:           usersRepo,
-		passwordService: users.NewPasswordService(usersRepo),
-		JwkService:      jwkService,
-		JwtService:      jwtService,
+		passwordService: passwdService,
+		JwkService:      jwk,
+		JwtService:      jwt,
+		findUsers:       findUsers,
+		findApps:        findApps,
 	}
 }
 
@@ -41,19 +50,35 @@ func (d *SignedTokensDTO) Serialize() string {
 	return shared.ToJSONIndent(d)
 }
 
-type Facade interface {
-	Login(ctx context.Context, credentials Credentials) (LoginState, error)
-
-	CreateSignedTokensResponse(ctx context.Context, params jwtlib.TokenCreateParams) (SignedTokensDTO, error)
-	ParseJwt(ctx context.Context, str string) (jwtlib.Jwt, error)
-	ParseAndValidateJwt(ctx context.Context, str string) (jwtlib.Jwt, error)
-}
-
 type facadeImpl struct {
-	users           users.Repository
+	findUsers       users.FindService
 	JwkService      jwtlib.JwkService
 	JwtService      jwtlib.JwtService
 	passwordService users.PasswordService
+	findApps        apps.FindService
+}
+
+func (auth *facadeImpl) CreateSignedTokensFromLoginIdentity(ctx context.Context, identity *LoginIdentity) (SignedTokensDTO, error) {
+	user, err := auth.findUsers.FindOne(ctx, users.FindQuery{AnyId: identity.UserId})
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+	app, err := auth.findApps.FindOne(ctx, apps.FindQuery{AnyId: identity.ClientId})
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+
+	return auth.CreateSignedTokensResponse(ctx, jwtlib.TokenCreateParams{
+		User:   user,
+		App:    app,
+		Scopes: identity.Scopes,
+	})
+}
+
+func (auth *facadeImpl) CreateLoginIdentityFromToken(ctx context.Context, token jwtlib.Jwt) (*LoginIdentity, error) {
+	result := CreateLoginIdentityFromToken(token)
+
+	return result, nil
 }
 
 func (auth *facadeImpl) ParseJwt(ctx context.Context, str string) (jwtlib.Jwt, error) {
@@ -66,17 +91,27 @@ func (auth *facadeImpl) ParseJwt(ctx context.Context, str string) (jwtlib.Jwt, e
 }
 
 func (auth *facadeImpl) ParseAndValidateJwt(ctx context.Context, str string) (jwtlib.Jwt, error) {
-	token, err := new(jwt.Parser).Parse(str, func(token *jwt.Token) (interface{}, error) {
-		if token.Header["id"] == "" {
-
-		}
-	})
+	token, err := new(jwt.Parser).Parse(str, auth.getKeyId(ctx))
 	if err != nil {
 		return nil, err
 	}
 	return jwtlib.NewJwt(token), nil
 }
 
+func (auth *facadeImpl) getKeyId(ctx context.Context) func(token *jwt.Token) (interface{}, error) {
+	return func(token *jwt.Token) (interface{}, error) {
+		id := token.Header["id"]
+		if id == "" {
+			return nil, jwt.ErrInvalidKey
+		}
+
+		key, err := auth.JwkService.Get(ctx, id.(string))
+		if err != nil {
+			return nil, err
+		}
+		return key.PublicKey(), nil
+	}
+}
 
 func (auth *facadeImpl) GenerateNewJwk(ctx context.Context) error {
 	return auth.JwkService.GenerateNew(ctx)
@@ -122,7 +157,7 @@ func (auth *facadeImpl) CreateSignedTokensResponse(ctx context.Context, params j
 }
 
 func (auth *facadeImpl) Login(ctx context.Context, cred Credentials) (LoginState, error) {
-	user, loginState, err := auth.findUser(ctx, cred)
+	user, loginState, err := auth.findUserForLoginState(ctx, cred.Username)
 
 	if loginState != nil && loginState.IsNotOk() {
 		return loginState, err
@@ -141,21 +176,24 @@ func (auth *facadeImpl) Login(ctx context.Context, cred Credentials) (LoginState
 
 }
 
-func (auth *facadeImpl) findUser(ctx context.Context, cred Credentials) (*users.User, LoginState, error) {
-	user, err := auth.users.QueryOne(ctx, users.FindQuery{Username: cred.Username})
+func (auth *facadeImpl) findUserForLoginState(ctx context.Context, username string) (*users.User, LoginState, error) {
+	user, err := auth.findUsers.FindOne(ctx, users.FindQuery{AnyId: username})
 
 	if err != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
-			"username": cred.Username,
+			"username": username,
 		}).WithError(err).Error("Unable to find user - error happened")
 		return nil, NewLoginState(uuid.UUID{}).AddStep(NewLoginStep(StepFindUser, Error)), err
 	}
 	if user == nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
-			"username": cred.Username,
+			"username": username,
 		}).Warning("Unable to find user")
 		return nil, NewLoginState(uuid.UUID{}).AddStep(NewLoginStep(StepFindUser, Failed)), nil
 	}
+
+	shared.GetLogger(ctx).WithField("user", user).Debug("found user")
+
 	return user, NewLoginState(user.ID).AddStep(NewLoginStep(StepFindUser, Success)), nil
 }
 
@@ -168,8 +206,6 @@ func (auth *facadeImpl) loginUsernamePassword(ctx context.Context, cred Credenti
 	}
 	return loginState, nil
 }
-
-
 
 type TotpDTO struct {
 	TotpCode string

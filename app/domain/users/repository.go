@@ -17,6 +17,7 @@ type FindQuery struct {
 	Id       uuid.UUID
 	Username string
 	Email    string
+	AnyId    string
 }
 
 type User struct {
@@ -104,7 +105,10 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 	logFields := log.Fields{
 		"model": "user",
 	}
-	if query.Id != uuid.Nil {
+
+	iid := uuid.FromStringOrNil(query.AnyId)
+
+	if query.Id != uuid.Nil || iid != uuid.Nil {
 		db = db.Where("id = ?", query.Id)
 		logFields["id"] = query.Id
 	}
@@ -116,6 +120,11 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 	if query.Username != "" {
 		db = db.Where("username = ?", query.Username)
 		logFields["username"] = query.Username
+	}
+
+	if query.AnyId != "" && iid == uuid.Nil {
+		db.Where("username = ?", query.AnyId)
+		logFields["username"] = query.AnyId
 	}
 
 	db = r.common.AddPagination(db, logFields, query.PaginationQuery)

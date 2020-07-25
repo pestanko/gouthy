@@ -13,6 +13,12 @@ func NewOperationContext() context.Context {
 	return ctx
 }
 
+func NewContextWithConfiguration(config *AppConfig) context.Context {
+	ctx := NewOperationContext()
+	ctx = context.WithValue(ctx, "config", config)
+	return ctx
+}
+
 func ToJSON(obj interface{}) string {
 	data, _ := json.Marshal(obj)
 	return string(data)
@@ -21,4 +27,12 @@ func ToJSON(obj interface{}) string {
 func ToJSONIndent(obj interface{}) string {
 	data, _ := json.MarshalIndent(obj, "", "  ")
 	return string(data)
+}
+
+func GetConfig(ctx context.Context) *AppConfig {
+	value := ctx.Value("config")
+	if value == nil {
+		return nil
+	}
+	return value.(*AppConfig)
 }

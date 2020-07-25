@@ -9,7 +9,7 @@ import (
 
 func NewUsersController(tools *web_utils.HTTPTools) *UsersController {
 	return &UsersController{
-		Users: tools.App.Facades.Users,
+		Users: tools.App.DI.Users.Facade,
 		Http:  tools,
 	}
 }

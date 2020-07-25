@@ -9,7 +9,7 @@ import (
 
 func NewAppController(tools *web_utils.HTTPTools) *AppController {
 	return &AppController{
-		Apps:  tools.App.Facades.Apps,
+		Apps:  tools.App.DI.Apps.Facade,
 		Http:  tools,
 	}
 }
