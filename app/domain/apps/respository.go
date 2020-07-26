@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/shared/repositories"
+	"github.com/pestanko/gouthy/app/shared/repos"
 	"github.com/pestanko/gouthy/app/shared/utils"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +13,7 @@ import (
 )
 
 type FindQuery struct {
-	repositories.PaginationQuery
+	repos.PaginationQuery
 
 	Id       uuid.UUID
 	Codename string
@@ -81,13 +81,13 @@ type Repository interface {
 func NweApplicationsRepositoryDB(db *gorm.DB) Repository {
 	return &repositoryDB{
 		DB:     db,
-		common: repositories.NewCommonRepositoryDB(db, "Applications"),
+		common: repos.NewCommonRepositoryDB(db, "Applications"),
 	}
 }
 
 type repositoryDB struct {
 	DB     *gorm.DB
-	common repositories.CommonRepositoryDB
+	common repos.CommonRepositoryDB
 }
 
 func (r *repositoryDB) Query(ctx context.Context, query FindQuery) (result []Application, err error) {

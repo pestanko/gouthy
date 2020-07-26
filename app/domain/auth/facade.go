@@ -34,6 +34,7 @@ func NewAuthFacade(findUsers users.FindService, findApps apps.FindService, jwt j
 type SignedTokensDTO struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	SessionToken string `json:"session_token"`
 	IdToken      string `json:"id_token"`
 	ExpiresIn    string `json:"expires_in"`
 	TokenType    string `json:"token_type"`
@@ -143,6 +144,15 @@ func (auth *facadeImpl) CreateSignedTokensResponse(ctx context.Context, params j
 
 	if refresh != nil {
 		result.RefreshToken = refresh.Signature
+	}
+
+	session, err := auth.JwtService.CreateSignedSessionToken(ctx, params)
+	if err != nil {
+		return SignedTokensDTO{}, err
+	}
+
+	if session != nil {
+		result.SessionToken = session.Signature
 	}
 
 	id, err := auth.JwtService.CreateSignedIdToken(ctx, params)

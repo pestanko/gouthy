@@ -15,6 +15,7 @@ func RegisterRoutes(s *GouthyWebServer) {
 	s.controllers.api.auth.RegisterRoutes(v1Route.Group("/auth"))
 	s.controllers.api.users.RegisterRoutes(v1Route.Group("/users"))
 	s.controllers.api.apps.RegisterRoutes(v1Route.Group("/applications"))
+	s.controllers.api.internal.RegisterRoutes(v1Route.Group("/_internal"))
 
 	// Well Known
 	s.controllers.WellKnown.RegisterRoutes(s.Router.Group("./.well-known"))

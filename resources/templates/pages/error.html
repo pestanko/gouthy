@@ -10,7 +10,7 @@
         }
     </style>
 
-    <title>Gouthy: Index</title>
+    <title>Gouthy: Error</title>
 </head>
 <body>
 <div id="page-wrapper" class="bg-dark">
@@ -19,17 +19,19 @@
             <div class="w-100 text-center align-content-center">
                 <a href="/"><img src="/assets/img/icon.svg" class="login-lock-icon" alt="Gouthy icon"/></a>
             </div>
-            <h3 class="text-center w-100">Gouthy SSO</h3>
-            <div class="login-row mt-4">
-                <a href="/pages/login" class="btn btn-dark w-100">
-                   Go to Login
+            <h3 class="text-center w-100">{{.title}}</h3>
+
+            <div class="error w-100 mt-4">
+                {{.message}}
+            </div>
+            <div class="error w-100 mt-4">
+                {{.error}}
+            </div>
+            <div class="login-row w-100 mt-4">
+                <a href="/" class="btn btn-dark w-100">
+                    Go to the main page
                 </a>
             </div>
-            {{if .user}}
-                <div class="w-100 mt-4">
-                    You are already logged in as {{.user.Name}}
-                </div>
-            {{end}}
         </div>
     </div>
 </div>

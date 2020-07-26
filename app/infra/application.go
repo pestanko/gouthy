@@ -9,10 +9,12 @@ import (
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
+	"github.com/pestanko/gouthy/app/shared/store"
 )
 
 type GouthyApp struct {
 	db      *gorm.DB
+	stores  store.Stores
 	Config  *shared.AppConfig
 	Facades Facades
 	DI      DI
@@ -42,16 +44,26 @@ func GetDBConnection(config *shared.AppConfig) (*gorm.DB, error) {
 
 // GetApplication - gets an application instance
 func GetApplication(config *shared.AppConfig, db *gorm.DB) (GouthyApp, error) {
-	app := GouthyApp{Config: config, db: db, DI: NewDI(db, config)}
-	app.Facades = newFacades(&app)
-	return app, nil
+	stores := store.NewRedisStoresFromConfig(&config.Redis)
+	di := NewDI(db, config, stores)
+	return GouthyApp{
+		Config: config,
+		db:     db, DI: di,
+		stores:  stores,
+		Facades: newFacades(&di),
+	}, nil
 }
 
-func NewDI(db *gorm.DB, cfg *shared.AppConfig) DI {
+func NewDI(db *gorm.DB, cfg *shared.AppConfig, stores store.Stores) DI {
 	app := apps.NewDiProvider(db)
 	user := users.NewDiProvider(db)
 	jwtl := jwtlib.NewDiProvider(cfg.Jwk.Keys)
-	authProvider := auth.NewDiProvider(app.Services.Find, user.Services.Find, jwtl.Services.Jwk, jwtl.Services.Jwt, user.Services.Password)
+	authProvider := auth.NewDiProvider(
+		app.Services.Find, user.Services.Find,
+		jwtl.Services.Jwk, jwtl.Services.Jwt,
+		user.Services.Password, stores)
+
+
 	return DI{
 		Auth:  authProvider,
 		Users: user,
@@ -59,11 +71,11 @@ func NewDI(db *gorm.DB, cfg *shared.AppConfig) DI {
 	}
 }
 
-func newFacades(app *GouthyApp) Facades {
+func newFacades(di *DI) Facades {
 	return Facades{
-		Auth:  app.DI.Auth.Facade,
-		Users: app.DI.Users.Facade,
-		Apps:  app.DI.Apps.Facade,
-		Keys:  app.DI.Jwt.Facade,
+		Auth:  di.Auth.Facade,
+		Users: di.Users.Facade,
+		Apps:  di.Apps.Facade,
+		Keys:  di.Jwt.Facade,
 	}
 }

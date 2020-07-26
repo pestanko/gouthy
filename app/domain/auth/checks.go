@@ -9,7 +9,7 @@ import (
 
 type CheckState struct {
 	User        *users.User
-	Application *apps.ApplicationDTO
+	Application *apps.AppDTO
 	Password    string
 	Secret      string
 }

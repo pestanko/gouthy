@@ -2,6 +2,7 @@ package web_utils
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/auth"
@@ -49,7 +50,7 @@ func (tool *HTTPTools) NewControllerContext(gin *gin.Context) context.Context {
 
 func defaultAnonymousIdentity(ctx context.Context) *auth.LoginIdentity {
 	return &auth.LoginIdentity{
-		UserId:   uuid.Nil.String(),
+		UserId:   "",
 		ClientId: "default",
 		Scopes:   []string{shared.ScopeUnauthorized, shared.ScopeAnonymous},
 	}
@@ -109,16 +110,19 @@ func (tool *HTTPTools) Redirect(ctx context.Context, url string) {
 	g.Redirect(http.StatusFound, url)
 }
 
-func (tool *HTTPTools) RedirectWithRedirectState(ctx context.Context) error {
-	state, err := DecodeRedirectState(tool.GetRedirectState(ctx))
+func (tool *HTTPTools) RedirectWithRedirectState(ctx context.Context, defaultRedirect string) error {
+	redirect, err := DecodeRedirectState(tool.GetRedirectState(ctx))
 	if err != nil {
 		return err
 	}
-	tool.Redirect(ctx, state)
+	if redirect == "" {
+		redirect = defaultRedirect
+	}
+	tool.Redirect(ctx, redirect)
 	return nil
 }
 
-func (tool *HTTPTools) GetCurrentAppContext(ctx context.Context) (*apps.ApplicationDTO, error) {
+func (tool *HTTPTools) GetCurrentApp(ctx context.Context) (*apps.AppDTO, error) {
 	identity := tool.GetIdentity(ctx)
 	clientId := identity.ClientId
 
@@ -134,16 +138,11 @@ func (tool *HTTPTools) GetIdentity(ctx context.Context) *auth.LoginIdentity {
 }
 
 func (tool *HTTPTools) ExtractJwt(ctx context.Context) (jwtlib.Jwt, error) {
-	rawToken, err := extractJwkStringFromRequest(tool.Gin(ctx))
-	if err != nil {
-		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"raw_token": rawToken, // TODO anonymize
-		}).Error("")
-		return nil, err
-	}
+	rawToken := extractJwkStringFromRequest(ctx, tool.Gin(ctx))
+
 	if rawToken == "" {
 		shared.GetLogger(ctx).Debug("No token was found")
-		return nil, err
+		return nil, nil
 	}
 	token, err := tool.App.Facades.Auth.ParseAndValidateJwt(ctx, rawToken)
 	if err != nil {
@@ -157,12 +156,14 @@ func (tool *HTTPTools) ExtractJwt(ctx context.Context) (jwtlib.Jwt, error) {
 
 func (tool *HTTPTools) GetLoggedInUser(ctx context.Context) *users.UserDTO {
 	id := tool.GetIdentity(ctx)
-	if id == nil || id.UserId == "" {
+	if id == nil || id.UserId == "" || uuid.FromStringOrNil(id.UserId) == uuid.Nil {
 		return nil
 	}
+
 	dto, err := tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(id.LogFields()).Warn("Unable to get user")
+		return nil
 	}
 	return dto
 }
@@ -184,23 +185,54 @@ func (tool *HTTPTools) extractIdentityFromRequest(ctx context.Context) *auth.Log
 	return nil
 }
 
-func extractJwkStringFromRequest(gin *gin.Context) (string, error) {
+type ErrorPageParams struct {
+	Message string
+	Error   string
+	Title   string
+}
+
+func (tool *HTTPTools) ErrorPage(ctx context.Context, params ErrorPageParams) {
+	tool.HTML(ctx, http.StatusInternalServerError, "error.html", gin.H{
+		"message": params.Message,
+		"title":   params.Title,
+		"error":   params.Error,
+	})
+}
+
+func (tool *HTTPTools) GetCurrentUserAndApp(ctx context.Context) (user *users.UserDTO, app *apps.AppDTO, err error) {
+	id := tool.GetIdentity(ctx)
+	if id == nil {
+		return user, app, fmt.Errorf("no identity was found")
+	}
+
+	if id.UserId != "" && uuid.FromStringOrNil(id.UserId) != uuid.Nil {
+		user, err = tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
+		if err != nil {
+			return
+		}
+	}
+
+	app, err = tool.App.Facades.Apps.GetByClientId(ctx, id.ClientId)
+
+	return
+}
+
+func extractJwkStringFromRequest(ctx context.Context, gin *gin.Context) string {
 	// Extract from header
 	authHeaderValue := extractAuthHeader(gin, "Bearer")
 	if authHeaderValue != "" {
-		return authHeaderValue, nil
+		return authHeaderValue
 	}
 
-	// Extract from cookie
-	sessionToken, err := gin.Cookie(CookieSessionToken)
-	if err == nil {
-		return sessionToken, nil
+	cookieNames := []string{CookieSessionToken, CookieAccessToken}
+
+	for _, name := range cookieNames {
+		value := extractCookie(ctx, gin, name)
+		if name != "" {
+			return value
+		}
 	}
-	accessToken, err := gin.Cookie(CookieAccessToken)
-	if err != http.ErrNoCookie {
-		return "", err
-	}
-	return accessToken, err
+	return ""
 }
 
 func extractAuthHeader(gin *gin.Context, prefix string) string {
@@ -210,6 +242,24 @@ func extractAuthHeader(gin *gin.Context, prefix string) string {
 		return strings.TrimPrefix(authHeader, prefix)
 	}
 	return ""
+}
+
+func extractCookie(ctx context.Context, g *gin.Context, name string) string {
+	logEntry := shared.GetLogger(ctx).WithFields(log.Fields{
+		"cookie_name": name,
+	})
+	value, err := g.Cookie(name)
+	if err == http.ErrNoCookie {
+		logEntry.Debug("No cookie found with specified name")
+		return ""
+	}
+	if err != nil {
+		logEntry.WithError(err).Warning("Failed to extract cookie")
+		return ""
+	}
+
+	logEntry.Debug("Cookie found with specified name")
+	return value
 }
 
 func intoApiError(err error) api_errors.ApiError {

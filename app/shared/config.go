@@ -14,6 +14,7 @@ type AppConfig struct {
 	DB     DBConfig     `json:"db" yaml:"db" mapstructure:"db"`
 	Server ServerConfig `json:"server" yaml:"server" mapstructure:"server"`
 	Jwk    JwkConfig    `json:"jwk" yaml:"jwk" mapstructure:"jwk"`
+	Redis  RedisConfig  `json:"redis" yaml:"redis" mapstructure:"redis"`
 }
 
 //DBConfig - Database config
@@ -33,6 +34,11 @@ type ServerConfig struct {
 
 type JwkConfig struct {
 	Keys string `json:"keys"`
+}
+
+type RedisConfig struct {
+	Address  string `json:"addr" yaml:"addr" mapstructure:"addr"`
+	Password string `json:"password" yaml:"password" mapstructure:"password"`
 }
 
 const IsStatConfigName = "gouthy-config"

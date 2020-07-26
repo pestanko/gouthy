@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func OAuth2ParseAuthorizationRequest(request *gin.Context) auth.OAuth2AuthorizationRequest {
+func OAuth2ParseAuthorizationRequest(request *gin.Context) auth.OAuth2AuthRequest {
 	scopes := strings.Split(request.Param("scopes"), " ")
-	return auth.OAuth2AuthorizationRequest{
+	return auth.OAuth2AuthRequest{
 		ClientId:      request.Param("client_id"),
 		ResponseType:  request.Param("response_type"),
 		RedirectUri:   request.Param("request_uri"),

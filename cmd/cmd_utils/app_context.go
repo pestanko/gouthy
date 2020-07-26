@@ -13,18 +13,19 @@ func BindAppContext(fn func(ctx context.Context, app *infra.GouthyApp, cmd *cobr
 	var err error
 	config, err := shared.GetAppConfig()
 	checkError(err)
-
+	ctx := shared.NewContextWithConfiguration(&config)
+	ctx = context.WithValue(ctx, "client_id", "admin_console")
 
 	db, err := infra.GetDBConnection(&config)
 	checkError(err)
+	//db.SetLogger(shared.GetLogger(ctx))
+	db.LogMode(true)
 
 	defer db.Close()
 
 	app, err := infra.GetApplication(&config, db)
 	checkError(err)
 
-	ctx := shared.NewContextWithConfiguration(&config)
-	ctx = context.WithValue(ctx, "client_id", "admin_console")
 
 	checkError(fn(ctx, &app, cmd, args))
 }

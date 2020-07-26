@@ -13,7 +13,7 @@ type AuthorizationResult struct {
 }
 
 type OAuth2AuthorizationService interface {
-	ProcessRequest(ctx context.Context, request *OAuth2AuthorizationRequest) (AuthorizationResult, error)
+	ProcessRequest(ctx context.Context, request *OAuth2AuthRequest) (AuthorizationResult, error)
 }
 
 func NewOAuth2AuthorizationService(appFindService apps.FindService) OAuth2AuthorizationService {
@@ -24,7 +24,7 @@ type oAuth2AuthorizationServiceImpl struct {
 	appFindService apps.FindService
 }
 
-func (s *oAuth2AuthorizationServiceImpl) ProcessRequest(ctx context.Context, request *OAuth2AuthorizationRequest) (AuthorizationResult, error) {
+func (s *oAuth2AuthorizationServiceImpl) ProcessRequest(ctx context.Context, request *OAuth2AuthRequest) (AuthorizationResult, error) {
 	if err := s.checkRequest(ctx, request); err != nil {
 		return AuthorizationResult{}, err
 	}
@@ -36,7 +36,7 @@ func (s *oAuth2AuthorizationServiceImpl) ProcessRequest(ctx context.Context, req
 	return AuthorizationResult{}, nil
 }
 
-func (s *oAuth2AuthorizationServiceImpl) checkRequest(ctx context.Context, request *OAuth2AuthorizationRequest) error {
+func (s *oAuth2AuthorizationServiceImpl) checkRequest(ctx context.Context, request *OAuth2AuthRequest) error {
 	if request.ClientId == "" {
 		return s.failParamMissing(ctx, request, "client_id")
 	}
@@ -65,7 +65,7 @@ func (s *oAuth2AuthorizationServiceImpl) checkRequest(ctx context.Context, reque
 	return nil
 }
 
-func (s *oAuth2AuthorizationServiceImpl) checkApplication(ctx context.Context, request *OAuth2AuthorizationRequest) error {
+func (s *oAuth2AuthorizationServiceImpl) checkApplication(ctx context.Context, request *OAuth2AuthRequest) error {
 	app, err := s.appFindService.FindOne(ctx, apps.FindQuery{ClientId: request.ClientId})
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func (s *oAuth2AuthorizationServiceImpl) checkApplication(ctx context.Context, r
 	return nil
 }
 
-func (s *oAuth2AuthorizationServiceImpl) failParamMissing(ctx context.Context, request *OAuth2AuthorizationRequest, param string) error {
+func (s *oAuth2AuthorizationServiceImpl) failParamMissing(ctx context.Context, request *OAuth2AuthRequest, param string) error {
 	shared.GetLogger(ctx).WithFields(log.Fields{
 		"param":     param,
 		"client_id": request.ClientId,

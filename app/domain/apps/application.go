@@ -10,7 +10,7 @@ const ConsoleApplicationClientId = "admin_console"
 
 // DTO
 
-type ApplicationDTO struct {
+type AppDTO struct {
 	baseApplicationDTO
 	Description     string     `json:"description"`
 	ClientId        string     `json:"client_id"`

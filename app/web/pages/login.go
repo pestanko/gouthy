@@ -80,24 +80,44 @@ func (c *LoginPagesController) LoginPagePost(context *gin.Context) {
 
 func (c *LoginPagesController) doSuccessLogin(ctx context.Context, state auth.LoginState) {
 	gctx := c.Http.Gin(ctx)
-	user, _ := c.Users.GetByAnyId(ctx, state.UserID())
-	app, err := c.Http.GetCurrentAppContext(ctx)
+	user, err := c.Http.App.Facades.Users.GetByAnyId(ctx, state.UserID())
 	if err != nil {
-		shared.GetLogger(ctx).WithError(err).Info("Unable to get current app context")
+		shared.GetLogger(ctx).WithError(err).Info("Unable to get current user")
+		c.Http.ErrorPage(ctx, web_utils.ErrorPageParams{
+			Message: "Unable to get current user",
+			Error:   err.Error(),
+			Title:   "Error",
+		})
+		return
 	}
+
+	app, err := c.Http.GetCurrentApp(ctx)
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).Info("Unable to get current app")
+		c.Http.ErrorPage(ctx, web_utils.ErrorPageParams{
+			Message: "Unable to get current app",
+			Error:   err.Error(),
+			Title:   "Error",
+		})
+		return
+	}
+
 	identity := auth.NewLoginIdentity(user, app, []string{shared.ScopeUI, shared.ScopeSession})
 	tokens, err := c.Auth.CreateSignedTokensFromLoginIdentity(ctx, identity)
 	c.setTokensAsCookies(gctx, tokens)
-	c.Http.Gin(ctx).Redirect(http.StatusFound, "/")
+	if err := c.Http.RedirectWithRedirectState(ctx, "/"); err != nil {
+		shared.GetLogger(ctx).WithError(err).Info("Unable to redirect current app context")
+		c.Http.ErrorPage(ctx, web_utils.ErrorPageParams{
+			Message: "Unable to redirect",
+			Error:   err.Error(),
+			Title:   "Error",
+		})
+	}
 }
 
 func (c *LoginPagesController) setTokensAsCookies(gctx *gin.Context, tokens auth.SignedTokensDTO) {
 	domain := c.Http.App.Config.Server.Domain
-	gctx.SetCookie(web_utils.CookieAccessToken, tokens.AccessToken, int(jwtlib.HOUR), "/", domain, true, true)
-}
-
-func printError(ctx context.Context, err error, credentials loginCredentials) {
-
+	gctx.SetCookie(web_utils.CookieSessionToken, tokens.SessionToken, int(jwtlib.SessionTokenExpiration), "/", domain, true, true)
 }
 
 func (c *LoginPagesController) doErrorLogin(ctx context.Context, cred loginCredentials, state auth.LoginState, err error) {

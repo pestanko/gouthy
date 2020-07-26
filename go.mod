@@ -6,7 +6,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-openapi/strfmt v0.19.5 // indirect
-	github.com/golang/protobuf v1.4.0 // indirect
+	github.com/go-redis/redis/v8 v8.0.0-beta.7
 	github.com/google/uuid v1.1.1
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/jinzhu/gorm v1.9.12

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/shared/repositories"
+	"github.com/pestanko/gouthy/app/shared/repos"
 	"github.com/pestanko/gouthy/app/shared/utils"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +13,7 @@ import (
 )
 
 type FindQuery struct {
-	repositories.PaginationQuery
+	repos.PaginationQuery
 	Id       uuid.UUID
 	Username string
 	Email    string
@@ -76,7 +76,7 @@ type Repository interface {
 
 type repositoryDB struct {
 	DB     *gorm.DB
-	common repositories.CommonRepositoryDB
+	common repos.CommonRepositoryDB
 }
 
 func (r *repositoryDB) Create(ctx context.Context, user *User) error {
@@ -144,5 +144,5 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 }
 
 func NewUsersRepositoryDB(db *gorm.DB) Repository {
-	return &repositoryDB{DB: db, common: repositories.NewCommonRepositoryDB(db, "User")}
+	return &repositoryDB{DB: db, common: repos.NewCommonRepositoryDB(db, "User")}
 }

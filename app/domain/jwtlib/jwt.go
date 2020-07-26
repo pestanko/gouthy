@@ -35,6 +35,11 @@ type Jwt interface {
 	AppId() string
 	Scopes() shared.Scopes
 	Jti() JtiParts
+	Raw() string
+
+	// Kind of internal
+	Claims() map[string]interface{}
+	RawHeader() map[string]interface{}
 }
 
 type jwtImpl struct {
@@ -42,8 +47,20 @@ type jwtImpl struct {
 	jtiParts JtiParts
 }
 
+func (j *jwtImpl) RawHeader() map[string]interface{} {
+	return j.token.Header
+}
+
+func (j *jwtImpl) Claims() map[string]interface{} {
+	return j.token.Claims.(jwt.MapClaims)
+}
+
+func (j *jwtImpl) Raw() string {
+	return j.token.Raw
+}
+
 func (j *jwtImpl) Jti() JtiParts {
-	panic("implement me")
+	return j.jtiParts
 }
 
 func (j *jwtImpl) Scopes() shared.Scopes {
@@ -149,7 +166,7 @@ func (service *jwtSigningServiceImpl) Sign(ctx context.Context, token Jwt) (*Sig
 func (service *jwtSigningServiceImpl) Create(ctx context.Context, claims Claims) (Jwt, error) {
 	serialize := claims.Serialize()
 	token := jwt.NewWithClaims(jwt.GetSigningMethod("RS256"), serialize)
-	shared.GetLogger(ctx).WithFields(log.Fields(serialize)).Info("Create a new Jwt")
+	shared.GetLogger(ctx).WithFields(log.Fields(serialize)).Info("Create a new TokenClaims")
 	return NewJwt(token), nil
 }
 

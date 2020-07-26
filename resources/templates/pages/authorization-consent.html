@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="">
+<head>
+    {{template "styles-partial"}}
+    <link rel="stylesheet" href="/assets/css/index.css"/>
+    <style>
+        .main-content {
+            max-width: 950px;
+            min-width: 400px;
+        }
+    </style>
+
+    <title>Gouthy: OAuth 2.0 Consent</title>
+</head>
+<body>
+<div id="page-wrapper" class="bg-dark">
+    <div id="content">
+        <div class="box main-content bg-light">
+            <div class="w-100 text-center align-content-center">
+                <a href="/"><img src="/assets/img/icon.svg" class="login-lock-icon" alt="Gouthy icon"/></a>
+            </div>
+            {{if .user}}
+                <div class="w-100 mt-4">
+                    You are already logged in as {{.user.Name}}
+                </div>
+            {{end}}
+            <h3 class="text-center w-100">Gouthy SSO</h3>
+            <div class="login-row mt-4">
+                <a href="/pages/login" class="btn btn-dark w-100">
+                    Go to Login
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Optional JavaScript -->
+<!-- Popper.js first, then Bootstrap JS -->
+{{template "scripts-partial"}}
+</body>
+</html>

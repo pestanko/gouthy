@@ -12,3 +12,7 @@ server:
 
 jwk:
   keys: './data/jwks'
+
+redis:
+  addr: "localhost:6379"
+  password: ""

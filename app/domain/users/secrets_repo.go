@@ -4,14 +4,14 @@ import (
 	"context"
 	"github.com/jinzhu/gorm"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/shared/repositories"
+	"github.com/pestanko/gouthy/app/shared/repos"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type SecretQuery struct {
-	repositories.PaginationQuery
+	repos.PaginationQuery
 	Id     uuid.UUID
 	UserId uuid.UUID
 }
@@ -44,7 +44,7 @@ type SecretsRepository interface {
 
 type secretsRepositoryDB struct {
 	DB     *gorm.DB
-	common repositories.CommonRepositoryDB
+	common repos.CommonRepositoryDB
 }
 
 func (r *secretsRepositoryDB) QueryOne(ctx context.Context, query SecretQuery) (*SecretModel, error) {
@@ -96,5 +96,5 @@ func (r *secretsRepositoryDB) internalQueryBuilder(ctx context.Context, query Se
 }
 
 func NewSecretsRepositoryDB(DB *gorm.DB) SecretsRepository {
-	return &secretsRepositoryDB{DB: DB, common: repositories.NewCommonRepositoryDB(DB, "userSecrets")}
+	return &secretsRepositoryDB{DB: DB, common: repos.NewCommonRepositoryDB(DB, "userSecrets")}
 }

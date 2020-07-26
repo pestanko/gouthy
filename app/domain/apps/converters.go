@@ -22,11 +22,11 @@ func convertModelToBase(app *Application) baseApplicationDTO {
 	}
 }
 
-func ConvertModelToDTO(app *Application) *ApplicationDTO {
+func ConvertModelToDTO(app *Application) *AppDTO {
 	if app == nil {
 		return nil
 	}
-	dto := ApplicationDTO{
+	dto := AppDTO{
 		baseApplicationDTO: convertModelToBase(app),
 		Description:        app.Description,
 		ClientId:           app.ClientId,

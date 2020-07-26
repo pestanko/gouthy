@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/shared/repositories"
+	"github.com/pestanko/gouthy/app/shared/repos"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
@@ -107,7 +107,7 @@ func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 
 func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]ListUserDTO, error) {
 	list, err := f.findService.Find(ctx, FindQuery{
-		PaginationQuery: repositories.NewPaginationQuery(params.Limit, params.Offset),
+		PaginationQuery: repos.NewPaginationQuery(params.Limit, params.Offset),
 	})
 	if err != nil {
 		return []ListUserDTO{}, err
