@@ -1,29 +1,42 @@
 <!doctype html>
 <html lang="">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Gouthy</title>
+    {{template "styles-partial"}}
+    <link rel="stylesheet" href="/assets/css/index.css"/>
+    <style>
+        .main-content {
+            max-width: 950px;
+            min-width: 400px;
+        }
+    </style>
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css"
-          integrity="sha384-r4NyP46KrjDleawBgD5tp8Y7UzmLA05oM1iAEQ17CSuDqnUK2+k9luXQOfXJCJ4I" crossorigin="anonymous">
-
-    <link rel="stylesheet" href="/assets/css/global.css"/>
+    <title>Gouthy: Index</title>
 </head>
 <body>
+<div id="page-wrapper" class="bg-dark">
+    <div id="content">
+        <div class="box main-content bg-light">
+            <div class="w-100 text-center align-content-center">
+                <img src="/assets/img/icon.svg" class="login-lock-icon" alt="Gouthy icon"/>
+            </div>
+            <h3 class="text-center w-100">Gouthy SSO</h3>
+            <div class="login-row mt-4">
+                <a href="/pages/login" class="btn btn-dark w-100">
+                   Go to Login
+                </a>
+            </div>
+            {{if .user}}
+                <div class="w-100 mt-4">
+                    You are already logged in as {{.user.Name}}
+                </div>
+            {{end}}
+        </div>
+    </div>
+</div>
 
 
 <!-- Optional JavaScript -->
 <!-- Popper.js first, then Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/js/bootstrap.min.js"
-        integrity="sha384-oesi62hOLfzrys4LxRF63OJCXdXDipiYWBnvTl9Y9/TRlw5xlKIEHpNyvvDShgf/"
-        crossorigin="anonymous"></script>
-
+{{template "scripts-partial"}}
 </body>
 </html>

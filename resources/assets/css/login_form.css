@@ -16,23 +16,11 @@
 .login-box {
     background: var(--light-color);
     color: var(--dark-color);
-    box-sizing: border-box;
     width: 400px;
-    box-shadow: 1px 1px 3px #DDD;
-    margin: auto;
-    line-height: 20px;
-    display: block;
-    border: 1px solid #EAEAEA;
-    padding: 20px;
 }
 
 .link {
     color: var(--dark-color);
-}
-
-.login-lock-icon {
-    width: 100px;
-    margin: 20px auto 40px;
 }
 
 .login-button {

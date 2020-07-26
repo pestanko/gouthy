@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"github.com/spf13/cobra"
 )
@@ -49,10 +50,13 @@ func init() {
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Name, "name", "n", "", "User Full name")
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Username, "username", "u", "", "User's username")
 	usersCreateCmd.PersistentFlags().StringVarP(&user.Password, "password", "p", "", "User's password (not recommended)")
-	usersCreateCmd.PersistentFlags().StringVarP(&secret, "appSecret", "S", "", "User's appSecret")
+	usersCreateCmd.PersistentFlags().StringVarP(&secret, "secret", "S", "", "User's Secret")
 }
 
 func createNewUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+
+	shared.GetLogger(ctx).WithFields(user.LogFields()).Debug("creating user")
+
 	newUser, err := app.Facades.Users.Create(ctx, &user)
 
 	if err != nil {

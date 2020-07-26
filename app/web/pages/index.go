@@ -8,12 +8,12 @@ import (
 
 func NewIndexController(tools *web_utils.HTTPTools) *IndexController {
 	return &IndexController{
-		Tools: tools,
+		Http: tools,
 	}
 }
 
 type IndexController struct {
-	Tools *web_utils.HTTPTools
+	Http *web_utils.HTTPTools
 }
 
 func (c *IndexController) RegisterRoutes(r *gin.RouterGroup) {
@@ -22,6 +22,8 @@ func (c *IndexController) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (c *IndexController) indexPage(context *gin.Context) {
-	ctx := c.Tools.NewControllerContext(context)
-	c.Tools.HTML(ctx, http.StatusOK, "index.html", gin.H{})
+	ctx := c.Http.NewControllerContext(context)
+	c.Http.HTML(ctx, http.StatusOK, "index.html", gin.H{
+		"user": c.Http.GetLoggedInUser(ctx),
+	})
 }

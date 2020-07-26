@@ -59,6 +59,13 @@ func (user *User) ToEntity() *UserDTO {
 	}
 }
 
+func (user *User) LogFields() log.Fields {
+	return log.Fields{
+		"user_id":  user.ID,
+		"username": user.Username,
+	}
+}
+
 type Repository interface {
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
@@ -108,7 +115,11 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 
 	iid := uuid.FromStringOrNil(query.AnyId)
 
-	if query.Id != uuid.Nil || iid != uuid.Nil {
+	if iid != uuid.Nil {
+		query.Id = iid
+	}
+
+	if query.Id != uuid.Nil {
 		db = db.Where("id = ?", query.Id)
 		logFields["id"] = query.Id
 	}

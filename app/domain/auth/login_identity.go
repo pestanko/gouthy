@@ -8,11 +8,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+
 type LoginIdentity struct {
 	shared.LoggingIdentity
 	UserId   string
 	ClientId string
-	Scopes   []string
+	Scopes   shared.Scopes
 }
 
 func CreateLoginIdentityFromToken(token jwtlib.Jwt) *LoginIdentity {
@@ -40,8 +41,8 @@ func NewLoginIdentity(user *users.UserDTO, app *apps.ApplicationDTO, scopes []st
 
 func (id *LoginIdentity) LogFields() log.Fields {
 	return log.Fields{
-		"client_id": id.ClientId,
-		"uid":       id.UserId,
-		"scopes":    id.Scopes,
+		"login_client_id": id.ClientId,
+		"login_uid":       id.UserId,
+		"login_scopes":    id.Scopes,
 	}
 }

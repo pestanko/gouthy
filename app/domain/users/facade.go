@@ -50,23 +50,16 @@ func (f *facadeImpl) Create(ctx context.Context, newUser *CreateDTO) (*UserDTO, 
 	}
 
 	if err := user.SetPassword(newUser.Password); err != nil {
-		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"username": user.Username,
-		}).Error("Unable to hash a password")
+		shared.GetLogger(ctx).WithError(err).WithFields(user.LogFields()).Error("Unable to hash a password")
 		return nil, err
 	}
 
 	if err := f.users.Create(ctx, user); err != nil {
-		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"username": user.Username,
-		}).Error("Unable to create a new user")
+		shared.GetLogger(ctx).WithError(err).WithFields(user.LogFields()).Error("Unable to create a new user")
 		return nil, err
 	}
 
-	shared.GetLogger(ctx).WithFields(log.Fields{
-		"user_id":  user.ID,
-		"username": user.Username,
-	}).Info("Creating a new user")
+	shared.GetLogger(ctx).WithFields(user.LogFields()).Info("Creating a new user")
 
 	return ConvertModelToDTO(user), nil
 }
@@ -80,10 +73,7 @@ func (f *facadeImpl) Update(ctx context.Context, id uuid.UUID, update *UpdateDTO
 	}
 
 	if err := f.users.Update(ctx, &user); err != nil {
-		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"user_id":  user.ID,
-			"username": user.Username,
-		}).Error("Unable to update a user")
+		shared.GetLogger(ctx).WithError(err).WithFields(user.LogFields()).Error("Unable to update a user")
 		return nil, err
 	}
 
@@ -100,15 +90,14 @@ func (f *facadeImpl) UpdatePassword(ctx context.Context, id uuid.UUID, password 
 		return fmt.Errorf("current password does not match")
 	}
 
-	return 	f.passwordService.SetPassword(ctx, user, password.NewPassword)
+	return f.passwordService.SetPassword(ctx, user, password.NewPassword)
 }
 
 func (f *facadeImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 	var user, err = f.users.QueryOne(ctx, FindQuery{Id: userId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"user_id":  user.ID,
-			"username": user.Username,
+			"user_id": userId,
 		}).Error("Unable to delete a user")
 		return err
 	}
@@ -152,10 +141,6 @@ func (f *facadeImpl) GetByUsername(ctx context.Context, username string) (*UserD
 }
 
 func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*UserDTO, error) {
-	var uid, err = uuid.FromString(sid)
-	if err == nil {
-		return f.Get(ctx, uid)
-	}
-
-	return f.GetByUsername(ctx, sid)
+	one, err := f.findService.FindOne(ctx, FindQuery{AnyId: sid})
+	return ConvertModelToDTO(one), err
 }

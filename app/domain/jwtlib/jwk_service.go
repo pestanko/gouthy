@@ -6,11 +6,12 @@ import (
 	"github.com/pestanko/gouthy/app/domain/users"
 )
 
-const HOUR = 3600
+const HOUR int64 = 3600
 const DAY = HOUR * 24
 const AccessTokenExpiration = HOUR
 const RefreshTokenExpiration = 7 * DAY // WEEK
 const IdTokenExpiration = 8 * HOUR
+const SessionTokenExpiration = 12 * HOUR
 
 type JwkService interface {
 	GenerateNew(ctx context.Context) error
@@ -20,7 +21,7 @@ type JwkService interface {
 }
 
 type jwkServiceImpl struct {
-	repo      JwkRepository
+	repo JwkRepository
 }
 
 func (facade *jwkServiceImpl) GetLatest(ctx context.Context) (Jwk, error) {
@@ -44,7 +45,8 @@ func NewJwkService(jwkRepo JwkRepository) JwkService {
 }
 
 type TokenCreateParams struct {
-	User   *users.User
-	App    *apps.Application
-	Scopes []string
+	User          *users.User
+	App           *apps.Application
+	Scopes        []string
+	CorrelationId string
 }

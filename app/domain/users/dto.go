@@ -2,6 +2,7 @@ package users
 
 import (
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -24,6 +25,13 @@ type baseUserDTO struct {
 type CreateDTO struct {
 	baseUserDTO
 	Password string `json:"password"`
+}
+
+func (d *CreateDTO) LogFields() log.Fields {
+	return log.Fields{
+		"username": d.Username,
+		"user_id": d.ID,
+	}
 }
 
 type UpdateDTO struct {

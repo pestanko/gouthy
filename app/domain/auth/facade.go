@@ -100,7 +100,7 @@ func (auth *facadeImpl) ParseAndValidateJwt(ctx context.Context, str string) (jw
 
 func (auth *facadeImpl) getKeyId(ctx context.Context) func(token *jwt.Token) (interface{}, error) {
 	return func(token *jwt.Token) (interface{}, error) {
-		id := token.Header["id"]
+		id := token.Header["kid"]
 		if id == "" {
 			return nil, jwt.ErrInvalidKey
 		}
@@ -168,12 +168,13 @@ func (auth *facadeImpl) Login(ctx context.Context, cred Credentials) (LoginState
 		"user_id":  user.ID,
 	})
 
+	logEntry.Debug("Logging in the user")
+
 	if cred.Password != "" {
 		return auth.loginUsernamePassword(ctx, cred, loginState, user, logEntry)
 	}
 
 	return loginState, nil
-
 }
 
 func (auth *facadeImpl) findUserForLoginState(ctx context.Context, username string) (*users.User, LoginState, error) {

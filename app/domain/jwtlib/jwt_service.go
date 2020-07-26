@@ -4,20 +4,49 @@ import (
 	"context"
 )
 
+const (
+	TokenTypeAccess  = "a"
+	TokenTypeRefresh = "r"
+	TokenTypeId      = "i"
+	TokenTypeSession = "s"
+	TokenTypeUndefined = "U"
+)
+
 type JwtService interface {
 	CreateAccessToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
 	CreateRefreshToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
 	CreateIdToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
+	CreateSessionToken(ctx context.Context, params TokenCreateParams) (Jwt, error)
 	CreateSignedAccessToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
 	CreateSignedRefreshToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
 	CreateSignedIdToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
+	CreateSignedSessionToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error)
+}
+
+func NewJwtService(keys JwkRepository) JwtService {
+	jwtSigning := NewJwtSigningService(keys)
+	return &jwtServiceImpl{
+		keys:       keys,
+		jwtSigning: jwtSigning,
+	}
 }
 
 type jwtServiceImpl struct {
 	keys       JwkRepository
-	//users      users.Repository
-	//apps       apps.Repository
 	jwtSigning JwtSigningService
+}
+
+func (j *jwtServiceImpl) CreateSessionToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
+	const ExpTime = SessionTokenExpiration
+	return j.createInternal(ctx, params, ExpTime, TokenTypeRefresh)
+}
+
+func (j *jwtServiceImpl) CreateSignedSessionToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error) {
+	token, err := j.CreateSessionToken(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	return j.signToken(ctx, token)
 }
 
 func (j *jwtServiceImpl) CreateSignedAccessToken(ctx context.Context, params TokenCreateParams) (*SignedJwt, error) {
@@ -49,27 +78,21 @@ func (j *jwtServiceImpl) CreateSignedIdToken(ctx context.Context, params TokenCr
 
 func (j *jwtServiceImpl) CreateAccessToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
 	const ExpTime = AccessTokenExpiration
-	claims, err := j.makeClaims(ctx, params, ExpTime, "access_token")
-	if err != nil {
-		return nil, err
-	}
-
-	return j.createToken(ctx, claims)
+	return j.createInternal(ctx, params, ExpTime, TokenTypeAccess)
 }
 
 func (j *jwtServiceImpl) CreateRefreshToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
 	const ExpTime = RefreshTokenExpiration
-	claims, err := j.makeClaims(ctx, params, ExpTime, "refresh_token")
-	if err != nil {
-		return nil, err
-	}
-
-	return j.createToken(ctx, claims)
+	return j.createInternal(ctx, params, ExpTime, TokenTypeRefresh)
 }
 
 func (j *jwtServiceImpl) CreateIdToken(ctx context.Context, params TokenCreateParams) (Jwt, error) {
 	const ExpTime = IdTokenExpiration
-	claims, err := j.makeClaims(ctx, params, ExpTime, "id_token")
+	return j.createInternal(ctx, params, ExpTime, TokenTypeId)
+}
+
+func (j *jwtServiceImpl) createInternal(ctx context.Context, params TokenCreateParams, exp int64, tokenType string) (Jwt, error) {
+	claims, err := j.makeClaims(ctx, params, exp, tokenType)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +118,7 @@ func (j *jwtServiceImpl) signToken(ctx context.Context, jwt Jwt) (*SignedJwt, er
 }
 
 func (j *jwtServiceImpl) makeClaims(ctx context.Context, params TokenCreateParams, expTime int64, tokenType string) (Claims, error) {
-	claims := makeClaims(ctx, ClaimParams{
+	claims := makeClaims(ctx, claimsParams{
 		User:          params.User,
 		Application:   params.App,
 		Scopes:        params.Scopes,
@@ -104,12 +127,4 @@ func (j *jwtServiceImpl) makeClaims(ctx context.Context, params TokenCreateParam
 		Issuer:        "Gouthy", // TODO
 	})
 	return claims, nil
-}
-
-func NewJwtService(keys JwkRepository) JwtService {
-	jwtSigning := NewJwtSigningService(keys)
-	return &jwtServiceImpl{
-		keys:       keys,
-		jwtSigning: jwtSigning,
-	}
 }

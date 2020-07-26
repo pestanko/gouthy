@@ -3,17 +3,23 @@ package jwtlib
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pestanko/gouthy/app/shared"
 	log "github.com/sirupsen/logrus"
+	"strings"
 	"time"
 )
 
 func NewJwt(token *jwt.Token) Jwt {
-	return &jwtImpl{
+	impl := jwtImpl{
 		token: token,
 	}
+	impl.jtiParts, _ = ParseJtiParts(impl.ID())
+	return &impl
 }
+
+
 
 type Jwt interface {
 	JwkID() string
@@ -27,15 +33,26 @@ type Jwt interface {
 	ExpiresAt() time.Time
 	UserId() string
 	AppId() string
-	Scopes() []string
+	Scopes() shared.Scopes
+	Jti() JtiParts
 }
 
 type jwtImpl struct {
 	token *jwt.Token
+	jtiParts JtiParts
 }
 
-func (j *jwtImpl) Scopes() []string {
-	return j.Scopes()
+func (j *jwtImpl) Jti() JtiParts {
+	panic("implement me")
+}
+
+func (j *jwtImpl) Scopes() shared.Scopes {
+	scopes := j.mapClaims()["scope"].([]interface{})
+	result := make(shared.Scopes, len(scopes))
+	for i, item := range scopes {
+		result[i] = item.(string)
+	}
+	return result
 }
 
 func (j *jwtImpl) AppId() string {
@@ -138,4 +155,32 @@ func (service *jwtSigningServiceImpl) Create(ctx context.Context, claims Claims)
 
 func NewJwtSigningService(repo JwkRepository) JwtSigningService {
 	return &jwtSigningServiceImpl{keys: repo}
+}
+
+
+type JtiParts struct {
+	CorrelationId string
+	Type string
+	Offset string
+}
+
+func ParseJtiParts(str string) (JtiParts, error) {
+	if str == "" {
+		return JtiParts{}, fmt.Errorf("jti string is empty")
+	}
+	parts := strings.Split(str, ".")
+	if len(parts) != 3 {
+		return JtiParts{}, fmt.Errorf("expected jti parts are 3, provided: %d", len(parts))
+
+	}
+
+	return JtiParts{
+		Type:          parts[0],
+		CorrelationId: parts[1],
+		Offset:        parts[2],
+	}, nil
+}
+
+func JtiPartsToString(parts JtiParts) string {
+	return fmt.Sprintf("%s.%s.%s", parts.Type, parts.CorrelationId, parts.Offset)
 }

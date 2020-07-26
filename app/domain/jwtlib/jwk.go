@@ -134,7 +134,7 @@ func (repo *JwkRepositoryImpl) Add(ctx context.Context, jwk Jwk) error {
 	shared.GetLogger(ctx).WithFields(log.Fields{
 		"id":  jwk.KeyId(),
 		"alg": jwk.Algorithm(),
-	}).Info("Adding the jwk to the repository")
+	}).Info("Adding the jwk to the repository cache")
 	repo.cache[jwk.KeyId()] = jwk
 	return nil
 }

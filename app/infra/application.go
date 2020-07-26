@@ -43,6 +43,7 @@ func GetDBConnection(config *shared.AppConfig) (*gorm.DB, error) {
 // GetApplication - gets an application instance
 func GetApplication(config *shared.AppConfig, db *gorm.DB) (GouthyApp, error) {
 	app := GouthyApp{Config: config, db: db, DI: NewDI(db, config)}
+	app.Facades = newFacades(&app)
 	return app, nil
 }
 

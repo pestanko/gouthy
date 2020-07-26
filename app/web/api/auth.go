@@ -80,7 +80,7 @@ func (c *AuthController) Register(context *gin.Context) {
 }
 
 func (c *AuthController) OAuth2AuthorizeEndpoint(context *gin.Context) {
-	//ctx := c.Tools.NewControllerContext(context)
+	//ctx := c.http.NewControllerContext(context)
 	//authorizationRequest := web_utils.OAuth2ParseAuthorizationRequest(context)
 
 }

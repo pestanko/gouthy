@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/shared"
 )
 
 type CheckState struct {
@@ -32,11 +33,15 @@ func NewLoginCheckPassword(service users.PasswordService) LoginCheck {
 func (c *LoginCheckPassword) Check(ctx context.Context, loginState LoginState, checkState CheckState) (LoginState, error) {
 	valid, err := c.passwordService.CheckPassword(ctx, checkState.User, checkState.Password)
 	if err != nil {
+		shared.GetLogger(ctx).WithFields(loginState.LogFields()).WithError(err).Warning("Pwd check - error")
 		return loginState.AddStep(NewLoginStep(c.CheckName(), Error)), err
 	}
 	if !valid {
+		shared.GetLogger(ctx).WithFields(loginState.LogFields()).Debug("Pwd check - fail")
 		return loginState.AddStep(NewLoginStep(c.CheckName(), Failed)), nil
 	}
+	shared.GetLogger(ctx).WithFields(loginState.LogFields()).Debug("Pwd check - success")
+
 	return loginState.AddStep(NewLoginStep(c.CheckName(), Success)), nil
 }
 

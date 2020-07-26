@@ -6,6 +6,7 @@ import (
 	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/auth"
 	"github.com/pestanko/gouthy/app/domain/jwtlib"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/infra"
 	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/web/api_errors"
@@ -16,6 +17,7 @@ import (
 )
 
 const CookieAccessToken = "JWT_ACCESS"
+const CookieSessionToken = "JWT_SESSION"
 const CookieRefreshToken = "JWT_REFRESH"
 
 type Controller interface {
@@ -49,7 +51,7 @@ func defaultAnonymousIdentity(ctx context.Context) *auth.LoginIdentity {
 	return &auth.LoginIdentity{
 		UserId:   uuid.Nil.String(),
 		ClientId: "default",
-		Scopes:   []string{"unauthorized", "anonymous"},
+		Scopes:   []string{shared.ScopeUnauthorized, shared.ScopeAnonymous},
 	}
 }
 
@@ -127,8 +129,8 @@ func (tool *HTTPTools) GetCurrentAppContext(ctx context.Context) (*apps.Applicat
 	return tool.App.DI.Apps.Facade.GetByClientId(ctx, clientId)
 }
 
-func (tool *HTTPTools) GetIdentity(ctx context.Context) auth.LoginIdentity {
-	return ctx.Value("identity").(auth.LoginIdentity)
+func (tool *HTTPTools) GetIdentity(ctx context.Context) *auth.LoginIdentity {
+	return ctx.Value("identity").(*auth.LoginIdentity)
 }
 
 func (tool *HTTPTools) ExtractJwt(ctx context.Context) (jwtlib.Jwt, error) {
@@ -153,14 +155,26 @@ func (tool *HTTPTools) ExtractJwt(ctx context.Context) (jwtlib.Jwt, error) {
 	return token, nil
 }
 
+func (tool *HTTPTools) GetLoggedInUser(ctx context.Context) *users.UserDTO {
+	id := tool.GetIdentity(ctx)
+	if id == nil || id.UserId == "" {
+		return nil
+	}
+	dto, err := tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).WithFields(id.LogFields()).Warn("Unable to get user")
+	}
+	return dto
+}
+
 func (tool *HTTPTools) extractIdentityFromRequest(ctx context.Context) *auth.LoginIdentity {
 	token, _ := tool.ExtractJwt(ctx)
 	if token != nil {
 		identity, err := tool.App.Facades.Auth.CreateLoginIdentityFromToken(ctx, token)
 		if err != nil {
 			shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-				"jti": token.ID(),
-				"uid": token.UserId(),
+				"jti":       token.ID(),
+				"uid":       token.UserId(),
 				"client_id": token.ClientId(),
 			}).Error("Unable to create identity")
 		}
@@ -178,9 +192,13 @@ func extractJwkStringFromRequest(gin *gin.Context) (string, error) {
 	}
 
 	// Extract from cookie
+	sessionToken, err := gin.Cookie(CookieSessionToken)
+	if err == nil {
+		return sessionToken, nil
+	}
 	accessToken, err := gin.Cookie(CookieAccessToken)
-	if err == http.ErrNoCookie {
-		return "", nil
+	if err != http.ErrNoCookie {
+		return "", err
 	}
 	return accessToken, err
 }

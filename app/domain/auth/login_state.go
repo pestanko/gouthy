@@ -1,6 +1,10 @@
 package auth
 
-import uuid "github.com/satori/go.uuid"
+import (
+	"github.com/pestanko/gouthy/app/shared"
+	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
+)
 
 const (
 	StepLoginPassword = "login_password"
@@ -54,8 +58,9 @@ const (
 )
 
 type LoginState interface {
-	UserID() *string
-	ID() *string
+	shared.LoggingIdentity
+	UserID() string
+	ID() string
 	Steps() *[]LoginStep
 	AddStep(loginStep LoginStep) LoginState
 	IsSuccess() bool
@@ -72,16 +77,24 @@ type loginStateImpl struct {
 	id         string
 }
 
+func (state *loginStateImpl) LogFields() log.Fields {
+	return log.Fields{
+		"state": state.State(),
+		"user_id": state.UserID(),
+		"login_state_id": state.ID(),
+	}
+}
+
 func (state *loginStateImpl) IsNotOk() bool {
 	return !state.IsOk()
 }
 
-func (state *loginStateImpl) ID() *string {
-	return &state.id
+func (state *loginStateImpl) ID() string {
+	return state.id
 }
 
-func (state *loginStateImpl) UserID() *string {
-	return &state.userId
+func (state *loginStateImpl) UserID() string {
+	return state.userId
 }
 
 func (state *loginStateImpl) IsSuccess() bool {

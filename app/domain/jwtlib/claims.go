@@ -6,8 +6,8 @@ import (
 	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"time"
 )
 
@@ -19,7 +19,7 @@ type Claims struct {
 	Issuer     string `json:"iss,omitempty"`
 	Subject    string `json:"sub,omitempty"`
 	Additional map[string]interface{}
-	Scopes     []string `json:"scope,omitempty"`
+	Scopes     shared.Scopes `json:"scope,omitempty"`
 }
 
 func (claims *Claims) Serialize() jwt.MapClaims {
@@ -39,20 +39,26 @@ func (claims *Claims) Serialize() jwt.MapClaims {
 	return mapClaims
 }
 
-type ClaimParams struct {
+type claimsParams struct {
 	User          *users.User
 	Application   *apps.Application
 	ExpirationAdd int64
 	Issuer        string
-	Scopes        []string
+	Scopes        shared.Scopes
 	TokenType     string
+	CorrelationId string
+	Iat           int64
 }
 
 const PasswordLogin = "pwd-login"
 
-func makeClaims(ctx context.Context, params ClaimParams) Claims {
+func makeClaims(ctx context.Context, params claimsParams) Claims {
 	iat := time.Now().Unix()
-	id := params.TokenType + "." + uuid.NewV4().String()
+	id := JtiPartsToString(JtiParts{
+		CorrelationId: params.CorrelationId,
+		Type:          params.TokenType,
+		Offset:        makeOffset(params),
+	})
 
 	shared.GetLogger(ctx).WithFields(log.Fields{
 		"id":  id,
@@ -74,4 +80,18 @@ func makeClaims(ctx context.Context, params ClaimParams) Claims {
 		Scopes:     params.Scopes,
 		Additional: make(map[string]interface{}),
 	}
+}
+
+func makeOffset(params claimsParams) string {
+	switch params.TokenType {
+	case TokenTypeAccess:
+		return strconv.FormatInt(params.Iat, 10)
+	case TokenTypeRefresh:
+		return "0"
+	case TokenTypeId:
+		return "0"
+	case TokenTypeSession:
+		return "0"
+	}
+	return TokenTypeUndefined
 }

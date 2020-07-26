@@ -9,7 +9,6 @@ import (
 	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -69,35 +68,32 @@ func (c *LoginPagesController) LoginPagePost(context *gin.Context) {
 		Password: cred.Password,
 	})
 
+	shared.GetLogger(ctx).WithFields(loginState.LogFields()).Info("Login handler result")
+
 	if loginState != nil && loginState.IsOk() {
-		c.doSuccessLogin(ctx, cred, loginState)
+		c.doSuccessLogin(ctx, loginState)
 		return
 	} else {
 		c.doErrorLogin(ctx, cred, loginState, err)
 	}
 }
 
-func (c *LoginPagesController) doSuccessLogin(ctx context.Context, credentials loginCredentials, state auth.LoginState) {
+func (c *LoginPagesController) doSuccessLogin(ctx context.Context, state auth.LoginState) {
 	gctx := c.Http.Gin(ctx)
-	bytes, err := uuid.FromBytes([]byte(*state.UserID()))
-	if err != nil {
-		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
-			"username": credentials.Username,
-		})
-		printError(ctx, err, credentials)
-		return
-	}
-	user, _ := c.Users.Get(ctx, bytes)
+	user, _ := c.Users.GetByAnyId(ctx, state.UserID())
 	app, err := c.Http.GetCurrentAppContext(ctx)
-	identity := auth.NewLoginIdentity(user, app, []string{"ui_login"})
+	if err != nil {
+		shared.GetLogger(ctx).WithError(err).Info("Unable to get current app context")
+	}
+	identity := auth.NewLoginIdentity(user, app, []string{shared.ScopeUI, shared.ScopeSession})
 	tokens, err := c.Auth.CreateSignedTokensFromLoginIdentity(ctx, identity)
 	c.setTokensAsCookies(gctx, tokens)
+	c.Http.Gin(ctx).Redirect(http.StatusFound, "/")
 }
 
 func (c *LoginPagesController) setTokensAsCookies(gctx *gin.Context, tokens auth.SignedTokensDTO) {
 	domain := c.Http.App.Config.Server.Domain
-	gctx.SetCookie(web_utils.CookieAccessToken, tokens.AccessToken, jwtlib.HOUR, "/", domain, true, true)
-	gctx.SetCookie(web_utils.CookieRefreshToken, tokens.RefreshToken, jwtlib.RefreshTokenExpiration, "/", domain, true, true)
+	gctx.SetCookie(web_utils.CookieAccessToken, tokens.AccessToken, int(jwtlib.HOUR), "/", domain, true, true)
 }
 
 func printError(ctx context.Context, err error, credentials loginCredentials) {
