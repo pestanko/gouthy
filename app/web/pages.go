@@ -5,7 +5,7 @@ import (
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewPagesControllers(tools *web_utils.HTTPTools) *pagesControllers {
+func NewPagesControllers(tools *web_utils.Tools) *pagesControllers {
 	return &pagesControllers{
 		login: pages.NewLoginPagesController(tools,
 			tools.App.DI.Users.Facade,
@@ -24,5 +24,5 @@ type pagesControllers struct {
 	registration *pages.RegistrationController
 	oauth2       *pages.OAuth2Controller
 	debug        *pages.DebugController
-	index		*pages.IndexController
+	index        *pages.IndexController
 }

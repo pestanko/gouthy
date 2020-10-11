@@ -2,7 +2,7 @@ package web_utils
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/auth"
+	"github.com/pestanko/gouthy/app/auth"
 	"strings"
 )
 

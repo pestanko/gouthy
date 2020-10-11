@@ -1,19 +1,20 @@
 package pages
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	"net/http"
 )
 
-func NewIndexController(tools *web_utils.HTTPTools) *IndexController {
+func NewIndexController(tools *web_utils.Tools) *IndexController {
 	return &IndexController{
 		Http: tools,
 	}
 }
 
 type IndexController struct {
-	Http *web_utils.HTTPTools
+	Http *web_utils.Tools
 }
 
 func (c *IndexController) RegisterRoutes(r *gin.RouterGroup) {

@@ -17,7 +17,7 @@ package cmd
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
@@ -38,7 +38,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func executeLogin(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func executeLogin(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	return nil
 }
 

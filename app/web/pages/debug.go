@@ -1,19 +1,20 @@
 package pages
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	"net/http"
 )
 
-func NewDebugController(tools *web_utils.HTTPTools) *DebugController {
+func NewDebugController(tools *web_utils.Tools) *DebugController {
 	return &DebugController{
 		Tools: tools,
 	}
 }
 
 type DebugController struct {
-	Tools *web_utils.HTTPTools
+	Tools *web_utils.Tools
 }
 
 func (c *DebugController) RegisterRoutes(r *gin.RouterGroup) {

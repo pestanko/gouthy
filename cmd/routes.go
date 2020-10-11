@@ -18,7 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/app/web"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func runRoutes(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func runRoutes(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	webServer := web.CreateWebServer(app)
 
 	web.RegisterRoutes(webServer)

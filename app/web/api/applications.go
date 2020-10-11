@@ -2,21 +2,21 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewAppController(tools *web_utils.HTTPTools) *AppController {
+func NewAppController(tools *web_utils.Tools) *AppController {
 	return &AppController{
-		Apps:  tools.App.DI.Apps.Facade,
-		Http:  tools,
+		Apps: tools.App.DI.Apps.Facade,
+		Http: tools,
 	}
 }
 
 type AppController struct {
 	Apps apps.Facade
-	Http *web_utils.HTTPTools
+	Http *web_utils.Tools
 }
 
 func (ctrl *AppController) RegisterRoutes(r *gin.RouterGroup) {

@@ -2,13 +2,13 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewAuthController(tools *web_utils.HTTPTools) *AuthController {
+func NewAuthController(tools *web_utils.Tools) *AuthController {
 	return &AuthController{
 		Users: tools.App.DI.Users.Facade,
 		Auth:  tools.App.DI.Auth.Facade,
@@ -19,7 +19,7 @@ func NewAuthController(tools *web_utils.HTTPTools) *AuthController {
 type AuthController struct {
 	Users users.Facade
 	Auth  auth.Facade
-	Http  *web_utils.HTTPTools
+	Http  *web_utils.Tools
 }
 
 type Tokens struct {

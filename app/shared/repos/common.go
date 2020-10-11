@@ -2,9 +2,10 @@ package repos
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
+	"errors"
 	"github.com/pestanko/gouthy/app/shared"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type PaginationQuery struct {
@@ -44,7 +45,7 @@ func (repo *CommonRepositoryDB) Create(ctx context.Context, instance interface{}
 }
 
 func (repo *CommonRepositoryDB) Update(ctx context.Context, instance interface{}) error {
-	result := repo.db.Update(instance)
+	result := repo.db.Save(instance)
 	if result.Error != nil {
 		shared.GetLogger(ctx).WithFields(log.Fields{
 			"repo":     repo.Name,
@@ -82,7 +83,8 @@ func (repo *CommonRepositoryDB) Delete(ctx context.Context, instance interface{}
 func (repo *CommonRepositoryDB) ProcessQueryOne(db *gorm.DB, result interface{}, entry *log.Entry) (interface{}, error) {
 	dbResult := db.First(result)
 	if dbResult.Error != nil {
-		if gorm.IsRecordNotFoundError(dbResult.Error) {
+
+		if errors.Is(dbResult.Error, gorm.ErrRecordNotFound) {
 			entry.Debug("Record not found")
 			return nil, nil
 		}

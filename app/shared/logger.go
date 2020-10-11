@@ -19,6 +19,7 @@ func GetLogger(ctx context.Context) *log.Entry {
 	return entry
 }
 
+
 type LoggingIdentity interface {
 	LogFields() log.Fields
 }

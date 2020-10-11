@@ -2,18 +2,19 @@ package pages
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/domain/jwtlib"
-	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
-func NewLoginPagesController(http *web_utils.HTTPTools, users users.Facade, auth auth.Facade) *LoginPagesController {
+func NewLoginPagesController(http *web_utils.Tools, users users.Facade, auth auth.Facade) *LoginPagesController {
 	return &LoginPagesController{
 		Http:  http,
 		Users: users,
@@ -22,7 +23,7 @@ func NewLoginPagesController(http *web_utils.HTTPTools, users users.Facade, auth
 }
 
 type LoginPagesController struct {
-	Http  *web_utils.HTTPTools
+	Http  *web_utils.Tools
 	Users users.Facade
 	Auth  auth.Facade
 }

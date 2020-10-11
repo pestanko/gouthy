@@ -19,7 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
@@ -37,7 +37,7 @@ They can be either uuid or username.
 	},
 }
 
-func getUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func getUser(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	for _, username := range args {
 		user, err := app.Facades.Users.GetByAnyId(ctx, username)
 		if err != nil {

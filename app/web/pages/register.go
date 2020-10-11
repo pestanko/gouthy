@@ -1,19 +1,20 @@
 package pages
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	"net/http"
 )
 
-func NewRegistrationController(tools *web_utils.HTTPTools) *RegistrationController {
+func NewRegistrationController(tools *web_utils.Tools) *RegistrationController {
 	return &RegistrationController{
 		Tools: tools,
 	}
 }
 
 type RegistrationController struct {
-	Tools *web_utils.HTTPTools
+	Tools *web_utils.Tools
 }
 
 func (c *RegistrationController) RegisterRoutes(r *gin.RouterGroup) {
@@ -30,4 +31,3 @@ func (c *RegistrationController) registrationPagePost(context *gin.Context) {
 	ctx := c.Tools.NewControllerContext(context)
 	c.Tools.HTML(ctx, http.StatusOK, "register.html", gin.H{})
 }
-

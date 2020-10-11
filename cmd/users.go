@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func listAllUsers(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func listAllUsers(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	listEntities, err := app.Facades.Users.List(ctx, users.ListParams{})
 	if err != nil {
 		return err

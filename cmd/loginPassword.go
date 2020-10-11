@@ -19,8 +19,8 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"os"
 	"strings"
@@ -43,7 +43,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func executeLoginPassword(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func executeLoginPassword(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter Username: ")
 	username, err := reader.ReadString('\n')

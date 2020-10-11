@@ -19,9 +19,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/app/shared"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 	"github.com/spf13/cobra"
 )
@@ -53,7 +53,7 @@ func init() {
 	usersCreateCmd.PersistentFlags().StringVarP(&secret, "secret", "S", "", "User's Secret")
 }
 
-func createNewUser(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func createNewUser(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 
 	shared.GetLogger(ctx).WithFields(user.LogFields()).Debug("creating user")
 

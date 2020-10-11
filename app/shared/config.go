@@ -7,7 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
+
+const AppName = "gouthy"
+
 
 // Config - Application config
 type AppConfig struct {
@@ -25,6 +29,7 @@ type DBConfig struct {
 	Password string `json:"password" yaml:"password" mapstructure:"password"`
 	DBName   string `json:"dbname" yaml:"dbname" mapstructure:"dbname"`
 	SSLMode  string `json:"sslmode" yaml:"sslmode" mapstructure:"sslmode"`
+	InMemory bool   `json:"inmemory" yaml:"inmemory" mapstructure:"inmemory"`
 }
 
 type ServerConfig struct {
@@ -44,19 +49,19 @@ type RedisConfig struct {
 const IsStatConfigName = "gouthy-config"
 
 // Gets the application configuration directory
-func GetAppConfigDir() (string, error) {
+func getAppConfigDir() (string, error) {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		return "", err
 	}
 
-	appConfigDir := path.Join(configDir, "gouthy")
+	appConfigDir := path.Join(configDir, AppName)
 	return appConfigDir, nil
 }
 
-// GetConfigFilePath - gets a default config file path
-func GetConfigFilePath() (string, error) {
-	appConfigDir, err := GetAppConfigDir()
+// getConfigFilePath - gets a default config file path
+func getConfigFilePath() (string, error) {
+	appConfigDir, err := getAppConfigDir()
 	if err != nil {
 		return "", err
 	}
@@ -88,7 +93,7 @@ func (config *AppConfig) Dump() (string, error) {
 
 // SaveToDefaultLocation - Saves a config to the default location ~/.config/isstat/gouthy-config.yml
 func (config *AppConfig) SaveToDefaultLocation() error {
-	filePath, err := GetConfigFilePath()
+	filePath, err := getConfigFilePath()
 	if err != nil {
 		return err
 	}
@@ -104,7 +109,7 @@ func LoadConfig(cfgFile string) error {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find configDir directory.
-		appConfigDir, err := GetAppConfigDir()
+		appConfigDir, err := getAppConfigDir()
 		if err != nil {
 			return err
 		}
@@ -118,10 +123,12 @@ func LoadConfig(cfgFile string) error {
 		viper.SetConfigName(IsStatConfigName)
 	}
 
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
+	if err := viper.MergeInConfig(); err == nil {
 		log.WithField("file", viper.ConfigFileUsed()).Info("Using config file")
 	} else {
 		log.WithField("file", viper.ConfigFileUsed()).WithError(err).Debug("Config file not found")
@@ -144,6 +151,7 @@ func GetAppConfig() (AppConfig, error) {
 func setDefaults() {
 	viper.SetDefault("server.domain", "localhost")
 	viper.SetDefault("server.port", 5000)
+	viper.SetDefault("db.inmemory", false)
 	viper.SetDefault("dryrun", false)
 }
 

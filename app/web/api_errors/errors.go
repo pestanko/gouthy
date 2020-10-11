@@ -49,7 +49,7 @@ func (e ApiError) WithEntity(entity string) ApiError {
 	return e
 }
 
-func FromGouthyError(err shared.GouthyError) ApiError {
+func FromGouthyError(err shared.AppError) ApiError {
 	return NewApiError().WithDetail(map[string]interface{}(err.Detail()))
 }
 

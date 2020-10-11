@@ -32,7 +32,7 @@ const AdminConsoleApp = "admin_console"
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
   Use:   "gouthy",
-  Short: "A brief description of your application",
+  Short: "Gouthy - Simple Golang Authentication Server",
   Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
 

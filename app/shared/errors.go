@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -11,7 +12,7 @@ const (
 
 type ErrDetail map[string]interface{}
 
-func NewGouthyError(msg string) GouthyError {
+func NewAppError(msg string) AppError {
 	mixin := gouthyErrorImpl{
 		message: msg,
 		detail:  make(map[string]interface{}),
@@ -20,11 +21,11 @@ func NewGouthyError(msg string) GouthyError {
 	return &mixin
 }
 
-type GouthyError interface {
+type AppError interface {
 	error
-	WithDetail(detail ErrDetail) GouthyError
-	AddDetailField(name string, value interface{}) GouthyError
-	WithType(errType string) GouthyError
+	WithDetail(detail ErrDetail) AppError
+	AddDetailField(name string, value interface{}) AppError
+	WithType(errType string) AppError
 	Type() string
 	Detail() ErrDetail
 	Message() string
@@ -41,17 +42,17 @@ func (err *gouthyErrorImpl) Type() string {
 	return err.errType
 }
 
-func (err *gouthyErrorImpl) WithType(errType string) GouthyError {
+func (err *gouthyErrorImpl) WithType(errType string) AppError {
 	err.errType = errType
 	return err
 }
 
-func (err *gouthyErrorImpl) AddDetailField(name string, value interface{}) GouthyError {
+func (err *gouthyErrorImpl) AddDetailField(name string, value interface{}) AppError {
 	err.detail[name] = value
 	return err
 }
 
-func (err *gouthyErrorImpl) WithDetail(partial ErrDetail) GouthyError {
+func (err *gouthyErrorImpl) WithDetail(partial ErrDetail) AppError {
 	for key, val := range partial {
 		err.detail[key] = val
 	}
@@ -76,9 +77,13 @@ func (err *gouthyErrorImpl) LogAppend(entry *log.Entry) *log.Entry {
 
 func LogError(entry *log.Entry, err error) *log.Entry {
 	switch v := err.(type) {
-	case GouthyError:
+	case AppError:
 		return v.LogAppend(entry)
 	default:
 		return entry.WithError(err)
 	}
+}
+
+func NewErrInvalidField(filed string) AppError {
+	return NewAppError(fmt.Sprintf("field '%s' is invalid", filed)).WithType("field_validation")
 }

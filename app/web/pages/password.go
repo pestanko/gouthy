@@ -1,19 +1,20 @@
 package pages
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	"net/http"
 )
 
-func NewPasswordController(tools *web_utils.HTTPTools) *PasswordController {
+func NewPasswordController(tools *web_utils.Tools) *PasswordController {
 	return &PasswordController{
 		Tools: tools,
 	}
 }
 
 type PasswordController struct {
-	Tools *web_utils.HTTPTools
+	Tools *web_utils.Tools
 }
 
 func (c *PasswordController) RegisterRoutes(r *gin.RouterGroup) {

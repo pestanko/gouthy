@@ -5,7 +5,7 @@ import (
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewApiControllers(tools *web_utils.HTTPTools) *apisControllers {
+func NewApiControllers(tools *web_utils.Tools) *apisControllers {
 	return &apisControllers{
 		users:    api.NewUsersController(tools),
 		auth:     api.NewAuthController(tools),

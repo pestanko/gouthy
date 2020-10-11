@@ -18,7 +18,7 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/infra"
+	"github.com/pestanko/gouthy/app/core"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
@@ -39,7 +39,7 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func keysGetLatest(ctx context.Context, app *infra.GouthyApp, cmd *cobra.Command, args []string) error {
+func keysGetLatest(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
 	key, err := app.Facades.Keys.GetLatest(ctx)
 	if err != nil {
 		return err

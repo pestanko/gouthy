@@ -2,15 +2,16 @@ package api
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/apps"
-	"github.com/pestanko/gouthy/app/domain/auth"
-	"github.com/pestanko/gouthy/app/domain/users"
-	"github.com/pestanko/gouthy/app/web/web_utils"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/users"
+	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewInternalController(tools *web_utils.HTTPTools) *InternalController {
+func NewInternalController(tools *web_utils.Tools) *InternalController {
 	return &InternalController{
 		Users: tools.App.DI.Users.Facade,
 		Auth:  tools.App.DI.Auth.Facade,
@@ -21,7 +22,7 @@ func NewInternalController(tools *web_utils.HTTPTools) *InternalController {
 type InternalController struct {
 	Users users.Facade
 	Auth  auth.Facade
-	Http  *web_utils.HTTPTools
+	Http  *web_utils.Tools
 }
 
 func (c *InternalController) RegisterRoutes(r *gin.RouterGroup) {

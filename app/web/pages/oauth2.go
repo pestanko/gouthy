@@ -1,19 +1,20 @@
 package pages
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/web/web_utils"
-	"net/http"
 )
 
-func NewOAuth2Controller(tools *web_utils.HTTPTools) *OAuth2Controller {
+func NewOAuth2Controller(tools *web_utils.Tools) *OAuth2Controller {
 	return &OAuth2Controller{
 		Tools: tools,
 	}
 }
 
 type OAuth2Controller struct {
-	Tools *web_utils.HTTPTools
+	Tools *web_utils.Tools
 }
 
 func (c *OAuth2Controller) RegisterRoutes(r *gin.RouterGroup) {
@@ -25,4 +26,3 @@ func (c *OAuth2Controller) authorizationConsentPage(context *gin.Context) {
 	ctx := c.Tools.NewControllerContext(context)
 	c.Tools.HTML(ctx, http.StatusOK, "authorization-consent.html", gin.H{})
 }
-

@@ -6,15 +6,14 @@ import (
 )
 
 type WellKnownController struct {
-	Tools *web_utils.HTTPTools
+	Tools *web_utils.Tools
 }
 
-func NewWellKnownController(tools *web_utils.HTTPTools) *WellKnownController {
+func NewWellKnownController(tools *web_utils.Tools) *WellKnownController {
 	return &WellKnownController{Tools: tools}
 }
 
-
-func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup){
+func (c *WellKnownController) RegisterRoutes(route *gin.RouterGroup) {
 	route.GET("/openid-configuration", c.OpenIdConfigurationEndpoint)
 }
 

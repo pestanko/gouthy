@@ -2,16 +2,16 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
 type UserSecretsController struct {
 	Users users.Facade
-	Http  *web_utils.HTTPTools
+	Http  *web_utils.Tools
 }
 
-func NewSecretsController(entitiesFacade users.Facade, http *web_utils.HTTPTools) *UserSecretsController {
+func NewSecretsController(entitiesFacade users.Facade, http *web_utils.Tools) *UserSecretsController {
 	return &UserSecretsController{Users: entitiesFacade, Http: http}
 }
 

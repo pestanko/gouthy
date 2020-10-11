@@ -2,12 +2,12 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/domain/users"
+	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 
-func NewUsersController(tools *web_utils.HTTPTools) *UsersController {
+func NewUsersController(tools *web_utils.Tools) *UsersController {
 	return &UsersController{
 		Users: tools.App.DI.Users.Facade,
 		Http:  tools,
@@ -16,7 +16,7 @@ func NewUsersController(tools *web_utils.HTTPTools) *UsersController {
 
 type UsersController struct {
 	Users users.Facade
-	Http  *web_utils.HTTPTools
+	Http  *web_utils.Tools
 }
 
 func (ctrl *UsersController) RegisterRoutes(r *gin.RouterGroup) {

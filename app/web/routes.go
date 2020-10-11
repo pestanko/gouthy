@@ -1,6 +1,6 @@
 package web
 
-func RegisterRoutes(s *GouthyWebServer) {
+func RegisterRoutes(s *AppWebServer) {
 	// Templates
 	s.Router.LoadHTMLGlob("resources/templates/**/*")
 
@@ -29,5 +29,3 @@ func RegisterRoutes(s *GouthyWebServer) {
 	s.controllers.pages.debug.RegisterRoutes(pagesRoute)
 	s.controllers.pages.index.RegisterRoutes(s.Router.Group("/"))
 }
-
-
