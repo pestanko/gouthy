@@ -72,14 +72,14 @@ func (c *LoginPagesController) LoginPagePost(context *gin.Context) {
 	shared.GetLogger(ctx).WithFields(loginState.LogFields()).Info("Login handler result")
 
 	if loginState != nil && loginState.IsOk() {
-		c.doSuccessLogin(ctx, loginState)
+		c.doSuccessLogin(ctx, loginState, cred)
 		return
 	} else {
 		c.doErrorLogin(ctx, cred, loginState, err)
 	}
 }
 
-func (c *LoginPagesController) doSuccessLogin(ctx context.Context, state auth.LoginState) {
+func (c *LoginPagesController) doSuccessLogin(ctx context.Context, state auth.LoginState, cred loginCredentials) {
 	gctx := c.Http.Gin(ctx)
 	user, err := c.Http.App.Facades.Users.GetByAnyId(ctx, state.UserID())
 	if err != nil {
@@ -117,8 +117,7 @@ func (c *LoginPagesController) doSuccessLogin(ctx context.Context, state auth.Lo
 }
 
 func (c *LoginPagesController) setTokensAsCookies(gctx *gin.Context, tokens auth.SignedTokensDTO) {
-	domain := c.Http.App.Config.Server.Domain
-	gctx.SetCookie(web_utils.CookieSessionToken, tokens.SessionToken, int(jwtlib.SessionTokenExpiration), "/", domain, true, true)
+	gctx.SetCookie(web_utils.CookieSessionToken, tokens.SessionToken, int(jwtlib.SessionTokenExpiration), "/", "", false, true)
 }
 
 func (c *LoginPagesController) doErrorLogin(ctx context.Context, cred loginCredentials, state auth.LoginState, err error) {

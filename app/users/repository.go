@@ -134,7 +134,7 @@ func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery
 	}
 
 	if query.AnyId != "" && iid == uuid.Nil {
-		db.Where("username = ?", query.AnyId)
+		db = db.Where("username = ?", query.AnyId)
 		logFields["username"] = query.AnyId
 	}
 

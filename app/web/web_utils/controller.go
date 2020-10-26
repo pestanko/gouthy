@@ -22,6 +22,8 @@ const CookieAccessToken = "JWT_ACCESS"
 const CookieSessionToken = "JWT_SESSION"
 const CookieRefreshToken = "JWT_REFRESH"
 
+const redirectState = "_rs"
+
 type Controller interface {
 	RegisterRoutes(router *gin.RouterGroup)
 }
@@ -91,7 +93,6 @@ func (tool *Tools) Gin(ctx context.Context) *gin.Context {
 }
 
 func (tool *Tools) GetRedirectState(ctx context.Context) string {
-	const redirectState = "_rs"
 	g := tool.Gin(ctx)
 	postValue, ok := g.GetPostForm(redirectState)
 	if ok {
