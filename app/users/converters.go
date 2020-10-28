@@ -5,7 +5,9 @@ func ConvertModelsToList(list []User) []ListUserDTO {
 
 	for _, user := range list {
 		item := ListUserDTO{
-			baseUserDTO: *convertModelToUserBase(&user),
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
 		}
 		listUsers = append(listUsers, item)
 	}
@@ -21,7 +23,6 @@ func convertModelToUserBase(user *User) *baseUserDTO {
 		Username: user.Username,
 		Name:     user.Name,
 		Email:    user.Email,
-		ID:       user.ID,
 	}
 }
 

@@ -10,16 +10,16 @@ import (
 
 type UserDTO struct {
 	baseUserDTO
-	State     string    `json:"state"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uuid.UUID `json:"id" yaml:"id"`
+	State     string    `json:"state" yaml:"state"`
+	CreatedAt time.Time `json:"created_at" yaml:"state"`
+	UpdatedAt time.Time `json:"updated_at" yaml:"state"`
 }
 
 type baseUserDTO struct {
-	Username string    `json:"Username"`
-	Name     string    `json:"name"`
-	Email    string    `json:"Email"`
-	ID       uuid.UUID `json:"Id"`
+	Username string `json:"username" yaml:"state"`
+	Name     string `json:"name" yaml:"state"`
+	Email    string `json:"email" yaml:"email"`
 }
 
 type CreateDTO struct {
@@ -29,8 +29,8 @@ type CreateDTO struct {
 
 func (d *CreateDTO) LogFields() log.Fields {
 	return log.Fields{
-		"username": d.Username,
-		"user_id": d.ID,
+		"user_username": d.Username,
+		"user_email":    d.Email,
 	}
 }
 
@@ -46,5 +46,7 @@ type UpdatePasswordDTO struct {
 }
 
 type ListUserDTO struct {
-	baseUserDTO
+	ID       uuid.UUID `json:"id" yaml:"id"`
+	Username string    `json:"username" yaml:"state"`
+	Email    string    `json:"email" yaml:"email"`
 }

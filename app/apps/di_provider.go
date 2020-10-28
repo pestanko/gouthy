@@ -25,8 +25,8 @@ func newServices(appsRepo Repository) Services {
 	}
 }
 
-func newRepositories(db shared.DBConnection) Repositories {
-	gorm := shared.DBConnectionIntoGorm(db)
+func newRepositories(connection shared.DBConnection) Repositories {
+	gorm := shared.DBConnectionIntoGorm(connection)
 	return Repositories{
 		Apps:    NweApplicationsRepositoryDB(gorm),
 		Secrets: NewSecretsRepositoryDB(gorm),

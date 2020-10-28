@@ -1,6 +1,8 @@
 package pages
 
 import (
+	"context"
+	"fmt"
 	"github.com/pestanko/gouthy/app/auth"
 	"github.com/pestanko/gouthy/app/shared"
 	"net/http"
@@ -30,10 +32,27 @@ func (c *OAuth2Controller) authorizationConsentPage(context *gin.Context) {
 	user := c.Http.GetLoggedInUser(ctx)
 
 	if user == nil {
-		c.Http.Redirect(ctx, "/pages/login?_rs=" + c.Http.EncodeCurrentUrl(ctx))
-		return
+		c.Http.RedirectToLogin(ctx)
 	}
 
+	request := c.extractOAuth2Request(context, ctx)
+	err := c.checkOAuth2Request(ctx, &request)
+	if err != nil {
+		// TODO
+		c.Http.ErrorPage(ctx, web_utils.ErrorPageParams{
+			Message: "Invalid request",
+			Error:   err.Error(),
+			Title:   "Invalid request",
+		})
+	}
+
+	c.Http.HTML(ctx, http.StatusOK, "authorization-consent.html", gin.H{
+		"user":    user,
+		"request": request,
+	})
+}
+
+func (c *OAuth2Controller) extractOAuth2Request(context *gin.Context, ctx context.Context) auth.OAuth2AuthRequest {
 	request := auth.OAuth2AuthRequest{
 		ClientId:      context.Query("client_id"),
 		ResponseType:  context.Query("response_type"),
@@ -46,9 +65,20 @@ func (c *OAuth2Controller) authorizationConsentPage(context *gin.Context) {
 	}
 
 	shared.GetLogger(ctx).WithField("req", request).Info("Parsed OAuth2 request")
+	return request
+}
 
-	c.Http.HTML(ctx, http.StatusOK, "authorization-consent.html", gin.H{
-		"user":      user,
-		"client_id": request.ClientId,
-	})
+func (c *OAuth2Controller) checkOAuth2Request(ctx context.Context, request *auth.OAuth2AuthRequest) error {
+	if request.ClientId == "" {
+		return fmt.Errorf("no client_id provided")
+	}
+
+	if request.State == "" {
+		return fmt.Errorf("no state provided")
+	}
+
+	if request.RedirectUri == "" {
+		return fmt.Errorf("no redirect_uri provided")
+	}
+	return nil
 }

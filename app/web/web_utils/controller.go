@@ -112,6 +112,10 @@ func (tool *Tools) Redirect(ctx context.Context, url string) {
 	g.Redirect(http.StatusFound, url)
 }
 
+func (tool *Tools) RedirectToLogin(ctx context.Context) {
+	tool.Redirect(ctx, "/pages/login?_rs="+tool.EncodeCurrentUrl(ctx))
+}
+
 func (tool *Tools) RedirectWithRedirectState(ctx context.Context, defaultRedirect string) error {
 	redirect, err := DecodeRedirectState(tool.GetRedirectState(ctx))
 	if err != nil {
@@ -218,6 +222,8 @@ func (tool *Tools) GetCurrentUserAndApp(ctx context.Context) (user *users.UserDT
 
 	return
 }
+
+
 
 func extractJwkStringFromRequest(ctx context.Context, gin *gin.Context) string {
 	// Extract from header

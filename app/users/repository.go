@@ -25,12 +25,12 @@ type User struct {
 	CreatedAt time.Time  `gorm:"type:timestamp"`
 	UpdatedAt time.Time  `gorm:"type:timestamp"`
 	DeletedAt *time.Time `gorm:"type:timestamp"`
-	Username  string     `gorm:"type:varchar"`
-	Password  string     `gorm:"type:varchar"`
-	Name      string     `gorm:"type:varchar"`
-	Email     string     `gorm:"type:varchar"`
-	State     string     `gorm:"type:varchar"`
-	UserType  string     `gorm:"type:varchar,column:user_type"`
+	Username  string
+	Password  string
+	Name      string
+	Email     string
+	State     string
+	UserType  string     `gorm:"column:user_type"`
 }
 
 func (User) TableName() string {

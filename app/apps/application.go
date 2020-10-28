@@ -2,6 +2,7 @@ package apps
 
 import (
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -33,6 +34,13 @@ type CreateDTO struct {
 	Description string `json:"description"`
 	ClientId    string `json:"client_id"`
 	Type        string `json:"type"`
+}
+
+func (d *CreateDTO) LogFields() log.Fields {
+	return log.Fields{
+		"codename":  d.Codename,
+		"client_id": d.ClientId,
+	}
 }
 
 type UpdateDTO struct {

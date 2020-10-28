@@ -33,12 +33,12 @@ type DI struct {
 
 
 // GetApplication - gets an application instance
-func GetApplication(config *shared.AppConfig, db shared.DBConnection) (GouthyApp, error) {
+func GetApplication(config *shared.AppConfig, connection shared.DBConnection) (GouthyApp, error) {
 	stores := store.NewRedisStoresFromConfig(&config.Redis)
-	di := NewDI(db, config, stores)
+	di := NewDI(connection, config, stores)
 	return GouthyApp{
 		Config:  config,
-		db:      db,
+		db:      connection,
 		DI:      di,
 		stores:  stores,
 		Facades: newFacades(&di),

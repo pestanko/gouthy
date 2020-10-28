@@ -20,6 +20,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
 	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 	gorm.io/driver/postgres v1.0.2
 	gorm.io/driver/sqlite v1.1.3
 	gorm.io/gorm v1.20.2

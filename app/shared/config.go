@@ -12,7 +12,6 @@ import (
 
 const AppName = "gouthy"
 
-
 // Config - Application config
 type AppConfig struct {
 	DB     DBConfig     `json:"db" yaml:"db" mapstructure:"db"`
@@ -21,15 +20,28 @@ type AppConfig struct {
 	Redis  RedisConfig  `json:"redis" yaml:"redis" mapstructure:"redis"`
 }
 
+type DBEntryConfig struct {
+	Uri         string `json:"uri" yaml:"uri" mapstructure:"uri"`
+	DBType      string `json:"db_type" yaml:"db_type" mapstructure:"db_type"`
+	AutoMigrate bool   `json:"automigrate" yaml:"automigrate" mapstructure:"automigrate"`
+}
+
 //DBConfig - Database config
 type DBConfig struct {
-	Host     string `json:"host" yaml:"host" mapstructure:"host"`
-	Port     int    `json:"port" yaml:"port" mapstructure:"port"`
-	User     string `json:"user" yaml:"user" mapstructure:"user"`
-	Password string `json:"password" yaml:"password" mapstructure:"password"`
-	DBName   string `json:"dbname" yaml:"dbname" mapstructure:"dbname"`
-	SSLMode  string `json:"sslmode" yaml:"sslmode" mapstructure:"sslmode"`
-	InMemory bool   `json:"inmemory" yaml:"inmemory" mapstructure:"inmemory"`
+	Default     string                   `json:"default" yaml:"default" mapstructure:"default"`
+	DataSources map[string]DBEntryConfig `json:"datasources" yaml:"datasources" mapstructure:"datasources"`
+	AutoMigrate bool                     `json:"automigrate" yaml:"automigrate" mapstructure:"automigrate"`
+}
+
+func (c *DBConfig) GetDefault() *DBEntryConfig {
+	entry, ok := c.DataSources[c.Default]
+	if ok {
+		return &entry
+	}
+	return &DBEntryConfig{
+		Uri:    "file:memdb1?mode=memory&cache=shared",
+		DBType: "sqlite",
+	}
 }
 
 type ServerConfig struct {
@@ -91,7 +103,7 @@ func (config *AppConfig) Dump() (string, error) {
 	return string(content), nil
 }
 
-// SaveToDefaultLocation - Saves a config to the default location ~/.config/isstat/gouthy-config.yml
+// SaveToDefaultLocation - Saves a config to the default location ~/.config/gouthy/gouthy-config.yml
 func (config *AppConfig) SaveToDefaultLocation() error {
 	filePath, err := getConfigFilePath()
 	if err != nil {
@@ -132,7 +144,6 @@ func LoadConfig(cfgFile string) error {
 		log.WithField("file", viper.ConfigFileUsed()).Info("Using config file")
 	} else {
 		log.WithField("file", viper.ConfigFileUsed()).WithError(err).Debug("Config file not found")
-		return nil
 	}
 	return nil
 }
@@ -151,7 +162,7 @@ func GetAppConfig() (AppConfig, error) {
 func setDefaults() {
 	viper.SetDefault("server.domain", "localhost")
 	viper.SetDefault("server.port", 5000)
-	viper.SetDefault("db.inmemory", false)
+	viper.SetDefault("database.inmemory", false)
 	viper.SetDefault("dryrun", false)
 }
 
