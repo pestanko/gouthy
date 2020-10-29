@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/auth"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -128,7 +128,7 @@ func (tool *Tools) RedirectWithRedirectState(ctx context.Context, defaultRedirec
 	return nil
 }
 
-func (tool *Tools) GetCurrentApp(ctx context.Context) (*apps.AppDTO, error) {
+func (tool *Tools) GetCurrentApp(ctx context.Context) (*apps.Application, error) {
 	identity := tool.GetIdentity(ctx)
 	clientId := identity.ClientId
 
@@ -166,12 +166,12 @@ func (tool *Tools) GetLoggedInUser(ctx context.Context) *users.UserDTO {
 		return nil
 	}
 
-	dto, err := tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
+	user, err := tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(id.LogFields()).Warn("Unable to get user")
 		return nil
 	}
-	return dto
+	return users.ConvertModelToDTO(user)
 }
 
 func (tool *Tools) extractIdentityFromRequest(ctx context.Context) *auth.LoginIdentity {
@@ -205,25 +205,25 @@ func (tool *Tools) ErrorPage(ctx context.Context, params ErrorPageParams) {
 	})
 }
 
-func (tool *Tools) GetCurrentUserAndApp(ctx context.Context) (user *users.UserDTO, app *apps.AppDTO, err error) {
+func (tool *Tools) GetCurrentUserAndApp(ctx context.Context) (dto *users.UserDTO, appDTO *apps.AppDTO, err error) {
 	id := tool.GetIdentity(ctx)
 	if id == nil {
-		return user, app, fmt.Errorf("no identity was found")
+		return dto, appDTO, fmt.Errorf("no identity was found")
 	}
 
 	if id.UserId != "" && uuid.FromStringOrNil(id.UserId) != uuid.Nil {
-		user, err = tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
-		if err != nil {
+		user, err2 := tool.App.Facades.Users.GetByAnyId(ctx, id.UserId)
+		dto = users.ConvertModelToDTO(user)
+		if err2 != nil {
 			return
 		}
 	}
 
-	app, err = tool.App.Facades.Apps.GetByClientId(ctx, id.ClientId)
-
+	var app, err2 = tool.App.Facades.Apps.GetByClientId(ctx, id.ClientId)
+	err = err2
+	appDTO = apps.ConvertModelToDTO(app)
 	return
 }
-
-
 
 func extractJwkStringFromRequest(ctx context.Context, gin *gin.Context) string {
 	// Extract from header

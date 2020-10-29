@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 	log "github.com/sirupsen/logrus"

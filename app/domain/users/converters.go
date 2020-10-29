@@ -14,21 +14,9 @@ func ConvertModelsToList(list []User) []ListUserDTO {
 	return listUsers
 }
 
-func convertModelToUserBase(user *User) *baseUserDTO {
-	if user == nil {
-		return nil
-	}
-
-	return &baseUserDTO{
-		Username: user.Username,
-		Name:     user.Name,
-		Email:    user.Email,
-	}
-}
-
 func ConvertModelToDTO(user *User) *UserDTO {
 	if user == nil {
 		return nil
 	}
-	return user.ToEntity()
+	return user.ToDTO()
 }

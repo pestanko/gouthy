@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/shared/utils"
 	log "github.com/sirupsen/logrus"

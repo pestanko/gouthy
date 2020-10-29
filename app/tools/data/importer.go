@@ -1,11 +1,12 @@
-package core
+package data
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -18,17 +19,17 @@ type ImportSchema struct {
 	Apps  []apps.CreateDTO  `json:"apps" yaml:"apps"`
 }
 
-func NewDataImporter(app *GouthyApp) *DataImporter {
-	return &DataImporter{
+func NewImporter(app *core.GouthyApp) *Importer {
+	return &Importer{
 		app: app,
 	}
 }
 
-type DataImporter struct {
-	app *GouthyApp
+type Importer struct {
+	app *core.GouthyApp
 }
 
-func (imp *DataImporter) ImportFromFile(ctx context.Context, path string) error {
+func (imp *Importer) ImportFromFile(ctx context.Context, path string) error {
 	jsonFile, err := os.Open(path)
 	if err != nil {
 		return err
@@ -43,11 +44,11 @@ func (imp *DataImporter) ImportFromFile(ctx context.Context, path string) error 
 	schema := ImportSchema{}
 	ext := filepath.Ext(path)
 	switch ext {
-	case "yml", "yaml":
+	case ".yml", ".yaml":
 		if err := yaml.Unmarshal(all, &schema); err != nil {
 			return err
 		}
-	case "json":
+	case ".json":
 		if err := json.Unmarshal(all, &schema); err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func (imp *DataImporter) ImportFromFile(ctx context.Context, path string) error 
 	return imp.importSchema(ctx, &schema)
 }
 
-func (imp *DataImporter) importSchema(ctx context.Context, schema *ImportSchema) error {
+func (imp *Importer) importSchema(ctx context.Context, schema *ImportSchema) error {
 	// import users
 	if err := imp.importUsers(ctx, schema.Users); err != nil {
 		return err
@@ -76,14 +77,23 @@ func (imp *DataImporter) importSchema(ctx context.Context, schema *ImportSchema)
 	return nil
 }
 
-func (imp *DataImporter) importUsers(ctx context.Context, dtos []users.CreateDTO) error {
+func (imp *Importer) importUsers(ctx context.Context, dtos []users.CreateDTO) error {
 	shared.GetLogger(ctx).Info("Importing users")
 	for _, dto := range dtos {
 		fields := shared.GetLogger(ctx).WithFields(dto.LogFields())
+
+		// check whether user exists, if so - continue
+		found, err := imp.app.Facades.Users.GetByUsername(ctx, dto.Username)
+		if err != nil || found != nil {
+			fields.Warn("User already exists, skipping")
+			continue
+		}
+
 		fields.Debug("Importing user")
 		user, err := imp.app.Facades.Users.Create(ctx, &dto)
 		if err != nil {
 			fields.Error("Unable to import user")
+			continue
 		}
 		fields.WithField("user_id", user.ID.String()).Info("Imported user")
 	}
@@ -91,14 +101,23 @@ func (imp *DataImporter) importUsers(ctx context.Context, dtos []users.CreateDTO
 	return nil
 }
 
-func (imp *DataImporter) importApps(ctx context.Context, dtos []apps.CreateDTO) error {
+func (imp *Importer) importApps(ctx context.Context, dtos []apps.CreateDTO) error {
 	shared.GetLogger(ctx).Info("Importing apps")
 	for _, dto := range dtos {
 		fields := shared.GetLogger(ctx).WithFields(dto.LogFields())
-		fields.Debug("Importing apps")
+
+		// check whether user exists, if so - continue
+		found, err := imp.app.Facades.Apps.GetByCodename(ctx, dto.Codename)
+		if err != nil || found == nil {
+			// TODO: Override option
+			fields.Warn("App already exists, skipping")
+			continue
+		}
+
+		fields.Debug("Importing app")
 		app, err := imp.app.Facades.Apps.Create(ctx, &dto)
 		if err != nil {
-			fields.Error("Unable to import apps")
+			fields.Error("Unable to import app")
 		}
 		fields.WithField("app_id", app.ID.String()).Info("Imported app")
 	}
@@ -106,11 +125,14 @@ func (imp *DataImporter) importApps(ctx context.Context, dtos []apps.CreateDTO) 
 	return nil
 }
 
-func (imp *DataImporter) ImportFromFiles(ctx context.Context, files []string) error {
+func (imp *Importer) ImportFromFiles(ctx context.Context, files []string) error {
 	for _, file := range files {
+		logFields := shared.GetLogger(ctx).WithField("file", file)
+		logFields.Info("Importing from file started")
 		if err := imp.ImportFromFile(ctx, file); err != nil {
-			shared.GetLogger(ctx).WithError(err).WithField("file", file).Error("Unable to import from file")
+			logFields.WithError(err).Error("Unable to import from file")
 		}
+		logFields.Debug("Importing from file ended")
 	}
 	return nil
 }

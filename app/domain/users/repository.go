@@ -51,11 +51,15 @@ func (user *User) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) == nil
 }
 
-func (user *User) ToEntity() *UserDTO {
+func (user *User) ToDTO() *UserDTO {
 	return &UserDTO{
-		baseUserDTO: *convertModelToUserBase(user),
-		CreatedAt:   user.CreatedAt,
-		UpdatedAt:   user.UpdatedAt,
+		ID:        user.ID,
+		Username:  user.Username,
+		Name:      user.Name,
+		Email:     user.Email,
+		State:     user.State,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 }
 
@@ -80,6 +84,9 @@ type repositoryDB struct {
 }
 
 func (r *repositoryDB) Create(ctx context.Context, user *User) error {
+	if user.ID == uuid.Nil {
+		user.ID = uuid.NewV4()
+	}
 	return r.common.Create(ctx, user)
 }
 

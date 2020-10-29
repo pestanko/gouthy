@@ -35,12 +35,12 @@ func newRepositories(connection shared.DBConnection) Repositories {
 	}
 }
 
-func NewDiProvider(db shared.DBConnection) DiProvider {
+func NewDiProvider(db shared.DBConnection, features *shared.FeaturesConfig) DiProvider {
 	repos := newRepositories(db)
 	services := newServices(repos.Users)
 	return DiProvider{
 		Repos:    repos,
 		Services: services,
-		Facade:   NewUsersFacade(repos.Users, repos.Secrets, services),
+		Facade:   NewUsersFacade(repos.Users, repos.Secrets, services, features),
 	}
 }

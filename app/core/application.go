@@ -1,12 +1,12 @@
 package core
 
 import (
-	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/auth"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
 	"github.com/pestanko/gouthy/app/shared/store"
-	"github.com/pestanko/gouthy/app/users"
 )
 
 type GouthyApp struct {
@@ -33,10 +33,10 @@ type DI struct {
 
 
 // GetApplication - gets an application instance
-func GetApplication(config *shared.AppConfig, connection shared.DBConnection) (GouthyApp, error) {
+func GetApplication(config *shared.AppConfig, connection shared.DBConnection) (*GouthyApp, error) {
 	stores := store.NewRedisStoresFromConfig(&config.Redis)
 	di := NewDI(connection, config, stores)
-	return GouthyApp{
+	return &GouthyApp{
 		Config:  config,
 		db:      connection,
 		DI:      di,
@@ -46,8 +46,8 @@ func GetApplication(config *shared.AppConfig, connection shared.DBConnection) (G
 }
 
 func NewDI(db shared.DBConnection, cfg *shared.AppConfig, stores store.Stores) DI {
-	app := apps.NewDiProvider(db)
-	user := users.NewDiProvider(db)
+	app := apps.NewDiProvider(db, &cfg.Features)
+	user := users.NewDiProvider(db, &cfg.Features)
 	jwtl := jwtlib.NewDiProvider(cfg.Jwk.Keys)
 	authProvider := auth.NewDiProvider(
 		app.Services.Find, user.Services.Find,

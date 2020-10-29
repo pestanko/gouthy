@@ -3,10 +3,10 @@ package auth
 import (
 	"context"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )

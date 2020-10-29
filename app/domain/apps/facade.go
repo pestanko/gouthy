@@ -14,14 +14,14 @@ type ListParams struct {
 }
 
 type Facade interface {
-	Create(ctx context.Context, newApp *CreateDTO) (*AppDTO, error)
-	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*AppDTO, error)
+	Create(ctx context.Context, newApp *CreateDTO) (*Application, error)
+	Update(ctx context.Context, userId uuid.UUID, newUser *UpdateDTO) (*Application, error)
 	Delete(ctx context.Context, userId uuid.UUID) error
-	List(ctx context.Context, listParams ListParams) ([]ListApplicationDTO, error)
-	Get(ctx context.Context, appId uuid.UUID) (*AppDTO, error)
-	GetByCodename(ctx context.Context, appId string) (*AppDTO, error)
-	GetByAnyId(ctx context.Context, sid string) (*AppDTO, error)
-	GetByClientId(ctx context.Context, sid string) (*AppDTO, error)
+	List(ctx context.Context, listParams ListParams) ([]Application, error)
+	Get(ctx context.Context, appId uuid.UUID) (*Application, error)
+	GetByCodename(ctx context.Context, appId string) (*Application, error)
+	GetByAnyId(ctx context.Context, sid string) (*Application, error)
+	GetByClientId(ctx context.Context, sid string) (*Application, error)
 }
 
 
@@ -36,7 +36,7 @@ type facadeImpl struct {
 	findService FindService
 }
 
-func (f *facadeImpl) GetByClientId(ctx context.Context, clientId string) (*AppDTO, error) {
+func (f *facadeImpl) GetByClientId(ctx context.Context, clientId string) (*Application, error) {
 	var app, err = f.apps.QueryOne(ctx, FindQuery{ClientId: clientId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -45,10 +45,10 @@ func (f *facadeImpl) GetByClientId(ctx context.Context, clientId string) (*AppDT
 		return nil, err
 	}
 
-	return ConvertModelToDTO(app), nil
+	return app, nil
 }
 
-func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*AppDTO, error) {
+func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*Application, error) {
 
 	clientId := newApp.ClientId
 	if clientId == "" {
@@ -77,10 +77,10 @@ func (f *facadeImpl) Create(ctx context.Context, newApp *CreateDTO) (*AppDTO, er
 		"codename":       app.Codename,
 	}).Info("Creating a new application")
 
-	return ConvertModelToDTO(app), nil
+	return app, nil
 }
 
-func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *UpdateDTO) (*AppDTO, error) {
+func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *UpdateDTO) (*Application, error) {
 	var app = &Application{
 		ID:          appId,
 		Codename:    newApp.Codename,
@@ -102,7 +102,7 @@ func (f *facadeImpl) Update(ctx context.Context, appId uuid.UUID, newApp *Update
 		"codename":       app.Codename,
 	}).Info("Creating a new application")
 
-	return ConvertModelToDTO(app), nil
+	return app, nil
 }
 
 func (f *facadeImpl) Delete(ctx context.Context, appId uuid.UUID) error {
@@ -118,18 +118,18 @@ func (f *facadeImpl) Delete(ctx context.Context, appId uuid.UUID) error {
 	return f.apps.Delete(ctx, app)
 }
 
-func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]ListApplicationDTO, error) {
+func (f *facadeImpl) List(ctx context.Context, params ListParams) ([]Application, error) {
 	list, err := f.apps.Query(ctx, FindQuery{
 		PaginationQuery: repos.NewPaginationQuery(params.Limit, params.Offset),
 	})
 	if err != nil {
-		return []ListApplicationDTO{}, err
+		return []Application{}, err
 	}
 
-	return ConvertModelsToList(list), err
+	return list, err
 }
 
-func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*AppDTO, error) {
+func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*Application, error) {
 	var app, err = f.apps.QueryOne(ctx, FindQuery{Id: appId})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -138,10 +138,10 @@ func (f *facadeImpl) Get(ctx context.Context, appId uuid.UUID) (*AppDTO, error) 
 		return nil, err
 	}
 
-	return ConvertModelToDTO(app), nil
+	return app, nil
 }
 
-func (f *facadeImpl) GetByCodename(ctx context.Context, codename string) (*AppDTO, error) {
+func (f *facadeImpl) GetByCodename(ctx context.Context, codename string) (*Application, error) {
 	var app, err = f.apps.QueryOne(ctx, FindQuery{Codename: codename})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -150,10 +150,10 @@ func (f *facadeImpl) GetByCodename(ctx context.Context, codename string) (*AppDT
 		return nil, err
 	}
 
-	return ConvertModelToDTO(app), nil
+	return app, nil
 }
 
-func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*AppDTO, error) {
+func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*Application, error) {
 	one, err := f.findService.FindOne(ctx, FindQuery{AnyId: sid})
 	if err != nil {
 		shared.GetLogger(ctx).WithError(err).WithFields(log.Fields{
@@ -161,5 +161,5 @@ func (f *facadeImpl) GetByAnyId(ctx context.Context, sid string) (*AppDTO, error
 		}).Error("Unable to get an app")
 		return nil, err
 	}
-	return ConvertModelToDTO(one), err
+	return one, err
 }

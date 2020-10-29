@@ -105,16 +105,19 @@ func (r *repositoryDB) QueryOne(ctx context.Context, query FindQuery) (*Applicat
 	return one.(*Application), err
 }
 
-func (r *repositoryDB) Create(ctx context.Context, user *Application) error {
-	return r.common.Create(ctx, user)
+func (r *repositoryDB) Create(ctx context.Context, app *Application) error {
+	if app.ID == uuid.Nil {
+		app.ID = uuid.NewV4()
+	}
+	return r.common.Create(ctx, app)
 }
 
-func (r *repositoryDB) Update(ctx context.Context, user *Application) error {
-	return r.common.Update(ctx, user)
+func (r *repositoryDB) Update(ctx context.Context, app *Application) error {
+	return r.common.Update(ctx, app)
 }
 
-func (r *repositoryDB) Delete(ctx context.Context, user *Application) error {
-	return r.common.Delete(ctx, user)
+func (r *repositoryDB) Delete(ctx context.Context, app *Application) error {
+	return r.common.Delete(ctx, app)
 }
 
 func (r *repositoryDB) internalQueryBuilder(ctx context.Context, query FindQuery) (*gorm.DB, *log.Entry) {

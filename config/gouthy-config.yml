@@ -8,6 +8,14 @@ db:
       uri: "file:memdb1?mode=memory&cache=shared"
       db_type: "sqlite"
       automigrate: true
+      data_import:
+        - "data/samples/sample-data.yml"
+    sqlite:
+      uri: "file:data/db/sample.db&cache=shared"
+      db_type: "sqlite"
+      automigrate: true
+      data_import:
+        - "data/samples/sample-data.yml"
   default: in_memory
   automigrate: true
 
@@ -22,3 +30,11 @@ jwk:
 redis:
   addr: "localhost:6379"
   password: ""
+
+features:
+  password_policy:
+    enabled: true
+    params:
+      min_length: 8
+      max_length: 255
+      score: 1

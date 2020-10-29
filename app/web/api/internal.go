@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/auth"
-	"github.com/pestanko/gouthy/app/users"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
 

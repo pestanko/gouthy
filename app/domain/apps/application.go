@@ -49,6 +49,7 @@ type UpdateDTO struct {
 	Description string `gorm:"varchar" json:"description"`
 }
 
+// TODO remove
 type baseApplicationDTO struct {
 	Codename string    `json:"username"`
 	Name     string    `json:"name"`

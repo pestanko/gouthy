@@ -19,8 +19,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/apps"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"

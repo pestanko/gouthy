@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,11 +25,7 @@ func CreateLoginIdentityFromToken(token jwtlib.Jwt) *LoginIdentity {
 	}
 }
 
-func CreateLoginIdentityForUserAndApp(user *users.UserDTO, app *apps.AppDTO) *LoginIdentity {
-	return NewLoginIdentity(user, app, []string{})
-}
-
-func NewLoginIdentity(user *users.UserDTO, app *apps.AppDTO, scopes []string) *LoginIdentity {
+func NewLoginIdentity(user *users.User, app *apps.Application, scopes []string) *LoginIdentity {
 	return &LoginIdentity{
 		UserId:   user.ID.String(),
 		ClientId: app.ClientId,

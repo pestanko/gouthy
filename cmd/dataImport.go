@@ -18,6 +18,7 @@ package cmd
 import (
 	"context"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/tools/data"
 	"github.com/pestanko/gouthy/cmd/cmd_utils"
 
 	"github.com/spf13/cobra"
@@ -39,7 +40,7 @@ to quickly create a Cobra application.`,
 }
 
 func runDataImport(ctx context.Context, app *core.GouthyApp, cmd *cobra.Command, args []string) error {
-	importer := core.NewDataImporter(app)
+	importer := data.NewImporter(app)
 	return importer.ImportFromFiles(ctx, args)
 }
 

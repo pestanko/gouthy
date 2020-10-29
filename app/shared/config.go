@@ -12,18 +12,19 @@ import (
 
 const AppName = "gouthy"
 
+var disabledFeature = FeatureConfig{Enabled: false}
+
+type FeaturesConfig map[string]FeatureConfig
+
+type FeatureParams map[string]interface{}
+
 // Config - Application config
 type AppConfig struct {
-	DB     DBConfig     `json:"db" yaml:"db" mapstructure:"db"`
-	Server ServerConfig `json:"server" yaml:"server" mapstructure:"server"`
-	Jwk    JwkConfig    `json:"jwk" yaml:"jwk" mapstructure:"jwk"`
-	Redis  RedisConfig  `json:"redis" yaml:"redis" mapstructure:"redis"`
-}
-
-type DBEntryConfig struct {
-	Uri         string `json:"uri" yaml:"uri" mapstructure:"uri"`
-	DBType      string `json:"db_type" yaml:"db_type" mapstructure:"db_type"`
-	AutoMigrate bool   `json:"automigrate" yaml:"automigrate" mapstructure:"automigrate"`
+	DB       DBConfig       `json:"db" yaml:"db" mapstructure:"db"`
+	Server   ServerConfig   `json:"server" yaml:"server" mapstructure:"server"`
+	Jwk      JwkConfig      `json:"jwk" yaml:"jwk" mapstructure:"jwk"`
+	Redis    RedisConfig    `json:"redis" yaml:"redis" mapstructure:"redis"`
+	Features FeaturesConfig `json:"features" yaml:"features" mapstructure:"features"`
 }
 
 //DBConfig - Database config
@@ -44,6 +45,13 @@ func (c *DBConfig) GetDefault() *DBEntryConfig {
 	}
 }
 
+type DBEntryConfig struct {
+	Uri         string   `json:"uri" yaml:"uri" mapstructure:"uri"`
+	DBType      string   `json:"db_type" yaml:"db_type" mapstructure:"db_type"`
+	AutoMigrate bool     `json:"automigrate" yaml:"automigrate" mapstructure:"automigrate"`
+	DataImport  []string `json:"data_import" yaml:"data_import" mapstructure:"data_import"`
+}
+
 type ServerConfig struct {
 	Port   string `json:"port" yaml:"port" mapstructure:"port"`
 	Domain string `json:"domain" yaml:"domain" mapstructure:"domain"`
@@ -56,6 +64,11 @@ type JwkConfig struct {
 type RedisConfig struct {
 	Address  string `json:"addr" yaml:"addr" mapstructure:"addr"`
 	Password string `json:"password" yaml:"password" mapstructure:"password"`
+}
+
+type FeatureConfig struct {
+	Enabled bool          `json:"enabled" yaml:"enabled" mapstructure:"enabled"`
+	Params  FeatureParams `json:"params" yaml:"params" mapstructure:"params"`
 }
 
 const IsStatConfigName = "gouthy-config"
@@ -182,4 +195,42 @@ func SetupLogger(loggingLevel string) {
 
 	log.SetLevel(level)
 	log.SetOutput(os.Stderr)
+}
+
+// Feature config
+
+func (f *FeatureConfig) GetParamString(name string, d string) string {
+	str, ok := f.Params[name]
+	if !ok {
+		return d
+	}
+	return str.(string)
+}
+
+func (f *FeatureConfig) GetParamInt(name string, d int) int {
+	str, ok := f.Params[name]
+	if !ok {
+		return d
+	}
+	return str.(int)
+}
+
+func (f *FeatureConfig) GetParamsBool(name string, d bool) bool {
+	str, ok := f.Params[name]
+	if !ok {
+		return d
+	}
+	return str.(bool)
+}
+
+func (c *FeaturesConfig) PasswordPolicy() *FeatureConfig {
+	return c.GetFeature("password_policy")
+}
+
+func (c *FeaturesConfig) GetFeature(name string) *FeatureConfig {
+	if feature, ok := (*c)[name]; ok {
+		return &feature
+	}
+
+	return &disabledFeature
 }

@@ -84,6 +84,11 @@ func LogError(entry *log.Entry, err error) *log.Entry {
 	}
 }
 
+// Deprecated
 func NewErrInvalidField(filed string) AppError {
 	return NewAppError(fmt.Sprintf("field '%s' is invalid", filed)).WithType("field_validation")
+}
+
+func NewErrFromValidator(result *ValidationResult) AppError {
+	return result.IntoError()
 }

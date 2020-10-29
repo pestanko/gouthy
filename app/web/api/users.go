@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pestanko/gouthy/app/users"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/web/api_errors"
 	"github.com/pestanko/gouthy/app/web/web_utils"
 )
@@ -45,8 +45,7 @@ func (ctrl *UsersController) GetOne(context *gin.Context) {
 			"id": sid,
 		}))
 	} else {
-		ctrl.Http.JSON(ctx, 200, user)
-
+		ctrl.Http.JSON(ctx, 200, users.ConvertModelToDTO(user))
 	}
 
 }
@@ -59,7 +58,7 @@ func (ctrl *UsersController) List(context *gin.Context) {
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 200, list)
+	ctrl.Http.JSON(ctx, 200, users.ConvertModelsToList(list))
 }
 
 func (ctrl *UsersController) Delete(context *gin.Context) {
@@ -103,7 +102,7 @@ func (ctrl *UsersController) Create(context *gin.Context) {
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 201, user)
+	ctrl.Http.JSON(ctx, 201, users.ConvertModelToDTO(user))
 }
 
 func (ctrl *UsersController) Update(c *gin.Context) {
@@ -129,14 +128,17 @@ func (ctrl *UsersController) Update(c *gin.Context) {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
-	user, err := ctrl.Users.Update(ctx, found.ID, &updateUser)
+
+	entity := updateUser.ToEntity()
+	entity.ID = found.ID
+	user, err := ctrl.Users.Update(ctx, &entity)
 
 	if err != nil {
 		ctrl.Http.WriteErr(ctx, err)
 		return
 	}
 
-	ctrl.Http.JSON(ctx, 201, user)
+	ctrl.Http.JSON(ctx, 201, users.ConvertModelToDTO(user))
 }
 
 func (ctrl *UsersController) UpdatePassword(c *gin.Context) {

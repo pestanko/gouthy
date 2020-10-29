@@ -3,10 +3,11 @@ package cmd_utils
 import (
 	"context"
 	"fmt"
-	"github.com/pestanko/gouthy/app/apps"
 	"github.com/pestanko/gouthy/app/core"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
+	"github.com/pestanko/gouthy/app/tools/data"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -22,7 +23,8 @@ func BindAppContext(fn func(ctx context.Context, app *core.GouthyApp, cmd *cobra
 	checkError(err)
 	defer db.Close()
 
-	if config.DB.AutoMigrate && config.DB.GetDefault().AutoMigrate {
+	defaultDBConfig := config.DB.GetDefault()
+	if config.DB.AutoMigrate && defaultDBConfig.AutoMigrate {
 		shared.GetLogger(ctx).Info("Starting migration")
 		err = migrate(ctx, db)
 		checkError(err)
@@ -31,7 +33,11 @@ func BindAppContext(fn func(ctx context.Context, app *core.GouthyApp, cmd *cobra
 	app, err := core.GetApplication(&config, db)
 	checkError(err)
 
-	checkError(fn(ctx, &app, cmd, args))
+	if len(defaultDBConfig.DataImport) > 0 {
+		_ = data.NewImporter(app).ImportFromFiles(ctx, defaultDBConfig.DataImport)
+	}
+
+	checkError(fn(ctx, app, cmd, args))
 }
 
 func migrate(ctx context.Context, db shared.DBConnection) error {

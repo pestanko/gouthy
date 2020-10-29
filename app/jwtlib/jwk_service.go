@@ -2,8 +2,8 @@ package jwtlib
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/apps"
-	"github.com/pestanko/gouthy/app/users"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 )
 
 const HOUR int64 = 3600

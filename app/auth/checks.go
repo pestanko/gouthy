@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/shared"
-	"github.com/pestanko/gouthy/app/users"
 )
 
 type CheckState struct {

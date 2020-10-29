@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"github.com/pestanko/gouthy/app/apps"
+	"github.com/pestanko/gouthy/app/domain/apps"
+	"github.com/pestanko/gouthy/app/domain/users"
 	"github.com/pestanko/gouthy/app/jwtlib"
 	"github.com/pestanko/gouthy/app/shared/store"
-	"github.com/pestanko/gouthy/app/users"
 )
 
 type DiProvider struct {
